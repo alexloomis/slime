@@ -1,35 +1,34 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Slime.Resolve
-  ( resolveSlime
-  ) where
+module Slime.Resolve (resSlime) where
 
 import Core.Extra
 import Core.Type
 import Slime.Type
 
 import Control.Monad.State
-import Data.HashMap.Lazy (mapWithKey)
+import Data.HashMap.Lazy
 
-edgesTo :: (MonadState a m, HasEdges a) => Node -> m [Edge]
-edgesTo iden = filter (\x -> edgeTo x == iden) <$> gets hasEdges
-
-edgesFrom :: (MonadState a m, HasEdges a) => Node -> m [Edge]
-edgesFrom iden = filter (\x -> edgeFrom x == iden) <$> gets hasEdges
+edgesFrom :: (MonadState a m, HasEdges a) => Node -> m Int
+edgesFrom node = length <$> attr hasEdges node
 
 slimePerEdge :: (MonadState a m, HasEdges a, HasSlime a) => Node -> m Int
-slimePerEdge = liftM2 (liftM2 divOrZero) slimeAt (fmap length . edgesFrom)
+slimePerEdge = liftM2 (liftM2 divOrZero) (attr hasSlime) edgesFrom
 
-slimeFrom :: (MonadState a m, HasEdges a, HasSlime a) => Node -> m Int
-slimeFrom = liftM2 (liftM2 (*)) (fmap length . edgesFrom) slimePerEdge
+remainingMap :: (HasEdges a, HasSlime a) => State a (Node -> Int)
+remainingMap = packState $ liftM2 (liftM2 mod) (attr hasSlime) edgesFrom
 
-slimeTo :: (MonadState a m, HasEdges a, HasSlime a) => Node -> m Int
-slimeTo iden = edgesTo iden >>= fmap sum . mapM (slimePerEdge . edgeFrom)
+remainingSlime :: (HasEdges a, HasSlime a) => State a (NodeAttr Slime)
+remainingSlime = do
+  rmap <- remainingMap
+  gets hasEdges >>= (return . fromList . fmap (mapToSnd rmap) . keys)
+    where mapToSnd f a = (a,f a)
 
-deltaSlime :: (MonadState a m, HasEdges a, HasSlime a) => Node -> m Int
-deltaSlime = liftM2 (liftM2 (-)) slimeTo slimeFrom
+addedSlime :: (HasEdges a, HasSlime a) => State a (NodeAttr Slime)
+addedSlime = liftM2 g (packState slimePerEdge) (gets hasEdges)
+  where g s = fromListWith (+)
+              . concatMap (\(a,bs) -> [(b,s a) | b <- bs]) . toList
 
-resolveSlime :: (HasEdges a, HasSlime a) => State a Slime
-resolveSlime = do
-  new <- stuffState deltaSlime
-  mapWithKey ((+) . new) <$> gets hasSlime
+resSlime :: (HasEdges a, HasSlime a) => State a (NodeAttr Slime)
+resSlime = liftM2 (intersectionWith (+)) addedSlime remainingSlime
+

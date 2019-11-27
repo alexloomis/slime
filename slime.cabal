@@ -33,14 +33,15 @@ library
     , Slime.Example
     , Slime.Resolve
     , Slime.Type
-    -- , Unit.Command
-    -- , Unit.Type
+    , Unit.Resolve
+    , Unit.Type
   other-modules:
       Paths_slime
   hs-source-dirs:
       src
   build-depends:
       base >=4.7 && <5
+    , extra
     , hashable
     , mtl
     , text

@@ -7,10 +7,10 @@ import Position
 import Slime.Resolve
 import Slime.Type
 
-import Control.Monad.State (evalState)
-import Data.HashSet (HashSet)
-import qualified Data.HashSet as Set
-import qualified Data.HashMap.Lazy as HM
+import           Control.Monad.State (evalState)
+import qualified Data.HashMap.Lazy   as HM
+import           Data.HashSet        (HashSet)
+import qualified Data.HashSet        as Set
 
 testNodes :: HashSet Node
 testNodes =
@@ -18,10 +18,10 @@ testNodes =
     [ "Apple"
     , "Blueberry"
     , "Cherry"
-    , "Fig"
-    ]
+    , "Durian"
+    , "Fig" ]
 
-testSlime :: Slime
+testSlime :: NodeAttr Slime
 testSlime = HM.fromList
   [ ("Apple", 7)
   , ("Blueberry", 3)
@@ -29,20 +29,19 @@ testSlime = HM.fromList
   , ("Fig", 17)
   , ("Grape", 0) ]
 
-testEdges :: [(Node, Node)]
-testEdges =
-  [ ("Apple", "Blueberry")
-  , ("Blueberry", "Fig")
-  , ("Cherry", "Cantaloupe")
-  , ("Cherry", "Cherry")
-  , ("Fig", "Apple")
-  , ("Fig", "Apple")
-  , ("Fig", "Blueberry")
-  , ("Fig", "Cherry")
-  ]
+testEdges :: NodeAttr [Node]
+testEdges = HM.fromList
+  [ ("Apple", ["Blueberry"])
+  , ("Blueberry", ["Fig"])
+  , ("Cantaloupe", ["Cherry"])
+  , ("Cherry", ["Cherry"])
+  , ("Fig", [ "Apple"
+            , "Apple"
+            , "Blueberry"
+            , "Cherry" ]) ]
 
 testPosition :: Position
 testPosition = evalState (makePosition testEdges testSlime) testNodes
 
-testResolve :: Slime
-testResolve = evalState resolveSlime testPosition
+testResolve :: NodeAttr Slime
+testResolve = evalState resSlime testPosition

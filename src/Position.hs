@@ -4,7 +4,6 @@ module Position
   ) where
 
 import Core.Type
-import Slime.Resolve
 import Slime.Type
 
 import Control.Monad       (liftM3)
@@ -28,3 +27,4 @@ instance HasSlime Position where hasSlime = positionSlime
 makePosition :: HasNodes a => NodeAttr [Node] -> NodeAttr Slime -> State a Position
 makePosition edges rawSlime =
   liftM3 Position (gets hasNodes) (packAttr edges) (packAttr rawSlime)
+

@@ -12,11 +12,13 @@ import Data.HashMap.Lazy
 edgesFrom :: (MonadState a m, HasEdges a) => Node -> m Int
 edgesFrom node = length <$> attr hasEdges node
 
-slimePerEdge :: (MonadState a m, HasEdges a, HasSlime a) => Node -> m Int
-slimePerEdge = liftM2 (liftM2 divOrZero) (attr hasSlime) edgesFrom
+slimePerEdge :: (MonadState a m, HasEdges a, HasSlime a) => Node -> m Slime
+slimePerEdge = liftM2 (liftM2 divOrZero)
+  (attr hasSlime) (fmap fromIntegral . edgesFrom)
 
-remainingMap :: (HasEdges a, HasSlime a) => State a (Node -> Int)
-remainingMap = packState $ liftM2 (liftM2 mod) (attr hasSlime) edgesFrom
+remainingMap :: (HasEdges a, HasSlime a) => State a (Node -> Slime)
+remainingMap = packState $ liftM2 (liftM2 mod)
+  (attr hasSlime) (fmap fromIntegral . edgesFrom)
 
 remainingSlime :: (HasEdges a, HasSlime a) => State a (NodeAttr Slime)
 remainingSlime = do

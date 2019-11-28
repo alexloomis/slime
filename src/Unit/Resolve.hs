@@ -1,6 +1,7 @@
 {-# LANGUAGE TupleSections #-}
 module Unit.Resolve where
 
+import Core.Extra
 import Core.Type
 import Slime.Type
 import Unit.Type
@@ -20,8 +21,12 @@ sprayerDelta = do
   let damage = fmap (,sprayerDamage) targets ++ fmap (,0) (Set.toList nodes)
   return $ HM.fromListWith (+) damage
 
--- resSprayerActn ::
-resSprayerActn = undefined
+applySprayer :: (MonadState a m, HasNodes a, HasEdges a, HasSlime a, HasUnits a)
+  => m (NodeAttr Slime)
+applySprayer = do
+  delta <- sprayerDelta
+  slime <- gets hasSlime
+  return $ HM.intersectionWith satSub slime delta
 
 maxNeighbor :: (MonadState a m, HasEdges a, HasSlime a) => Node -> m Node
 maxNeighbor node = do

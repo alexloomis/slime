@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+
 module Core.Extra where
 
 import Control.Monad.State
@@ -15,7 +16,4 @@ divOrZero :: Integral a => a -> a -> a
 divOrZero num = \case
     0 -> 0
     x -> div num x
-
-satSub :: (Num a, Ord a) => a -> a -> a
-satSub x y = max (x-y) 0
 

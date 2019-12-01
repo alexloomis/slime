@@ -6,14 +6,15 @@ module Core.Extra.MaybeNat
   ( MaybeNat (..)
   , fmapOver
   , liftOver
+  , satSub
   ) where
 
 import Data.Bits        (Bits (..), popCountDefault)
 import Data.Data        (Data (..))
-import Data.Dynamic     (Typeable)
 import Data.Ix          (Ix (..))
 import Data.Maybe       (fromMaybe)
 import Data.Tuple.Extra (both)
+import Data.Typeable    (Typeable)
 import GHC.Arr          (indexError)
 import GHC.Generics     (Generic)
 import Numeric.Natural  (Natural)
@@ -29,6 +30,12 @@ fmapOver _ _        = MErr
 liftOver :: (Natural -> Natural -> Natural) -> MaybeNat -> MaybeNat -> MaybeNat
 liftOver f (MNat m) (MNat n) = MNat $ f m n
 liftOver _ _ _               = MErr
+
+satSub :: MaybeNat -> MaybeNat -> MaybeNat
+satSub MErr _ = MErr
+satSub m n
+  | m >= n = m - n
+  | otherwise = 0
 
 instance Num MaybeNat where
   (+) = liftOver (+)

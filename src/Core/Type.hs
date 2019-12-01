@@ -3,12 +3,14 @@
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE DefaultSignatures          #-}
 {-# LANGUAGE FlexibleInstances          #-}
+{-# LANGUAGE FunctionalDependencies     #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE InstanceSigs               #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
+{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeApplications           #-}
 {-# LANGUAGE UndecidableInstances       #-}
 
+{-
 module Core.Type
   ( Node (..)
   , HasNodes
@@ -19,65 +21,43 @@ module Core.Type
   , SafePack (..)
   , attr
   ) where
+-}
+module Core.Type where
 
-import           Control.Monad.State
-import           Data.Default.Class  (Default (..))
-import           Data.Hashable       (Hashable)
-import           Data.HashMap.Lazy   (HashMap, (!))
-import qualified Data.HashMap.Lazy   as HM
-import           Data.HashSet        (HashSet)
-import qualified Data.HashSet        as Set
-import           Data.String         (IsString)
-import           Data.Text           (Text)
-import           GHC.Records         (HasField, getField)
-import           Lens.Simple
+import Core.Util.MaybeNat
+
+import Control.Lens.Combinators
+import Data.Default.Class       (Default (..))
+import Data.Hashable            (Hashable)
+import Data.HashMap.Lazy        (HashMap)
+import Data.HashSet             (HashSet)
+import Data.String              (IsString)
+import Data.Text                (Text)
 
 newtype Node = Node {nodeName :: Text}
   deriving (Eq, Hashable, IsString, Ord, Show)
 
-instance HasField "nodes" (HashSet Node) (HashSet Node) where getField = id
-
-type HasNodes r = HasField "nodes" r (HashSet Node)
-
-getNodes :: HasNodes r => r -> HashSet Node
-getNodes = getField @"nodes"
-
 type NodeAttr = HashMap Node
 
-instance HasField "nodes" (NodeAttr a) (HashSet Node)
-  where getField = HM.keysSet
+newtype Slime = Slime MaybeNat
+  deriving (Enum, Eq, Integral, Num, Ord, Real, Show, Read)
+instance Default Slime where def = Slime 0
 
-type HasEdges r = HasField "edges" r (NodeAttr [Node])
+data Unit = Sprayer | Lobber deriving (Eq, Show)
 
-getEdges :: HasEdges r => r -> NodeAttr [Node]
-getEdges = getField @"edges"
+data Dummy = Dummy
+  { _nodes :: HashSet Node
+  , _edges :: NodeAttr [Node]
+  , _slime :: NodeAttr Slime
+  , _units :: NodeAttr (Maybe Unit) }
 
--- |Packs values, filtering out keys that do not correspond to nodes,
--- adding Default value for missing nodes.
-class SafePack m a where
-  packAttr :: MonadState r m => NodeAttr a -> m (NodeAttr a)
-  default packAttr :: (MonadState r m, HasNodes r, Default a)
-    => NodeAttr a -> m (NodeAttr a)
-  packAttr a = do
-    nodes <- gets (HM.map (const def) . Set.toMap . getNodes)
-    let attrMap = HM.intersection a nodes
-    return $ HM.union attrMap nodes
+$(makeFieldsNoPrefix ''Dummy)
 
-instance (MonadState r m, HasNodes r) => SafePack m [Node] where
-  packAttr a = do
-    nodeSet <- gets getNodes
-    nodes <- gets (HM.map (const def) . Set.toMap . getNodes)
-    let attrMap = HM.intersectionWith
-          (\v _ -> filter (`Set.member` nodeSet) v) a nodes
-    return $ HM.union attrMap nodes
+instance HasNodes (HashSet Node) (HashSet Node) where
+  nodes = id
 
--- |Specialises to, e.g.,
--- attrAt :: (a -> NodeAttr Slime) -> Node -> State a Slime
--- so in
--- a <- attr hasSlime node,
--- a :: Slime.
-attr :: (Eq k, Hashable k, MonadState a m)
-  => (a -> HashMap k b) -> k -> m b
-attr projection node = flip (!) node <$> gets projection
-
+type HNodes a = HasNodes a (HashSet Node)
+type HEdges a = HasEdges a (NodeAttr [Node])
+type HSlime a = HasSlime a (NodeAttr Slime)
+type HUnits a = HasUnits a (NodeAttr (Maybe Unit))
 

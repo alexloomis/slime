@@ -1,4 +1,6 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE RecordWildCards        #-}
+{-# LANGUAGE TemplateHaskell        #-}
 
 module Board.Sandpile where
 {-
@@ -9,25 +11,23 @@ module Board.Sandpile
 -}
 
 import Core.Type
-import Slime.Type
+import Core.Util
 
-import Control.Monad       (liftM3)
+import Control.Lens.Combinators
+import Control.Monad            (liftM3)
 import Control.Monad.State
-import Data.HashSet        (HashSet)
+import Data.HashSet             (HashSet)
 
 data Sandpile = Sandpile
-  { nodes :: HashSet Node
-  , edges :: NodeAttr [Node]
-  , slime :: NodeAttr Slime
+  { _nodes :: HashSet Node
+  , _edges :: NodeAttr [Node]
+  , _slime :: NodeAttr Slime
   } deriving (Show)
 
-makeSandpile :: HasNodes a => NodeAttr [Node] -> NodeAttr Slime -> State a Sandpile
+$(makeFieldsNoPrefix ''Sandpile)
+
+makeSandpile :: (MonadState r m, HasNodes r (HashSet Node))
+  => NodeAttr [Node] -> NodeAttr Slime -> m Sandpile
 makeSandpile rawEdges rawSlime =
-  liftM3 Sandpile (gets getNodes) (packAttr rawEdges) (packAttr rawSlime)
-
-updateSPEdges :: Sandpile -> NodeAttr [Node] -> Sandpile
-updateSPEdges Sandpile {..} e = Sandpile {edges = e, ..}
-
--- updateEdges s e = s {edges = e}
--- incrementA x@Foo{..} = x { a = succ a }
+  liftM3 Sandpile (gets $ view nodes) (packAttr rawEdges) (packAttr rawSlime)
 

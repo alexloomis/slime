@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE LambdaCase         #-}
 
-module Core.Extra.MaybeNat
+module Core.Util.MaybeNat
   ( MaybeNat (..)
   , fmapOver
   , liftOver

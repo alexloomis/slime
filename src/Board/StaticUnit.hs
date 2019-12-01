@@ -1,25 +1,29 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Board.StaticUnit
   ( StaticUnit (..)
   , makeStaticUnit
   ) where
 
 import Core.Type
-import Slime.Type
-import Unit.Type
+import Core.Util
 
-import Control.Monad       (liftM4)
+import Control.Lens.Combinators
+import Control.Monad            (liftM4)
 import Control.Monad.State
-import Data.HashSet        (HashSet)
+import Data.HashSet             (HashSet)
 
 data StaticUnit = StaticUnit
-  { nodes :: HashSet Node
-  , edges :: NodeAttr [Node]
-  , slime :: NodeAttr Slime
-  , units :: NodeAttr (Maybe Unit)
+  { _nodes :: HashSet Node
+  , _edges :: NodeAttr [Node]
+  , _slime :: NodeAttr Slime
+  , _units :: NodeAttr (Maybe Unit)
   } deriving (Show)
 
-makeStaticUnit :: HasNodes a => NodeAttr [Node] -> NodeAttr Slime
-  -> NodeAttr (Maybe Unit) -> State a StaticUnit
-makeStaticUnit rawEdges rawSlime rawUnit = liftM4 StaticUnit (gets getNodes)
+$(makeFieldsNoPrefix ''StaticUnit)
+
+makeStaticUnit :: (MonadState r m, HNodes r)
+  => NodeAttr [Node] -> NodeAttr Slime -> NodeAttr (Maybe Unit) -> m StaticUnit
+makeStaticUnit rawEdges rawSlime rawUnit = liftM4 StaticUnit (gets $ view nodes)
   (packAttr rawEdges) (packAttr rawSlime) (packAttr rawUnit)
 

@@ -6,9 +6,7 @@ import Board.Sandpile
 import Board.StaticUnit
 import Core.Type
 import Slime.Resolve
-import Slime.Type
 import Unit.Resolve
-import Unit.Type
 
 import           Control.Monad.State (evalState)
 import qualified Data.HashMap.Lazy   as HM
@@ -198,8 +196,10 @@ test2StaticUnitA = evalState
 test2ResolveA :: NodeAttr Slime
 test2ResolveA = evalState applySprayer test2StaticUnitA
 
+test2StaticUnitB :: StaticUnit
 test2StaticUnitB = evalState
   (makeStaticUnit test2Edges test2ResolveA test2Units) test2Nodes
 
+test2ResolveB :: NodeAttr Slime
 test2ResolveB = evalState applyLobber test2StaticUnitB
 

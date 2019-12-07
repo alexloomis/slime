@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE LambdaCase         #-}
 
-module Core.Util.MaybeNat
+module Engine.Util.MaybeNat
   ( MaybeNat (..)
   , fmapOver
   , liftOver
@@ -97,7 +97,7 @@ instance Ix MaybeNat where
 
 instance PrintfArg MaybeNat where
   formatArg = \case
-    MErr -> formatArg "MErr"
+    MErr -> formatArg ("MErr" :: String)
     a -> formatInteger . toInteger $ a
 
 

@@ -1,16 +1,15 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Board.StaticUnit
-  ( StaticUnit (..)
+  ( StaticUnit
   , makeStaticUnit
   ) where
 
-import Core.Type
-import Core.Util
+import Engine.Internal.Type
+import Engine.Internal.Util
 
 import Control.Lens.Combinators
-import Control.Monad            (liftM4)
-import Control.Monad.State
 import Data.HashSet             (HashSet)
 
 data StaticUnit = StaticUnit
@@ -18,12 +17,15 @@ data StaticUnit = StaticUnit
   , _edges :: NodeAttr [Node]
   , _slime :: NodeAttr Slime
   , _units :: NodeAttr (Maybe Unit)
-  } deriving (Show)
+  } deriving (Eq, Show)
 
 $(makeFieldsNoPrefix ''StaticUnit)
 
-makeStaticUnit :: (MonadState r m, HNodes r)
-  => NodeAttr [Node] -> NodeAttr Slime -> NodeAttr (Maybe Unit) -> m StaticUnit
-makeStaticUnit rawEdges rawSlime rawUnit = liftM4 StaticUnit (gets $ view nodes)
-  (packAttr rawEdges) (packAttr rawSlime) (packAttr rawUnit)
+makeStaticUnit :: HashSet Node -> NodeAttr [Node] -> NodeAttr Slime
+  -> NodeAttr (Maybe Unit) -> StaticUnit
+makeStaticUnit _nodes _edges _slime _units =
+  packAttr _units
+  . packAttr _slime
+  . packAttr _edges
+  $ StaticUnit {..}
 

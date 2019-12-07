@@ -1,12 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Test.Object where
+module Engine.Test
+  ( module Engine.Test
+  ) where
 
+import Board.MoveUnit
 import Board.Sandpile
 import Board.StaticUnit
-import Core.Type
-import Slime.Resolve
-import Unit.Resolve
+import Engine.Internal.Type
+import Engine.Slime.Resolve
+import Engine.Unit
 
 import           Control.Monad.State (evalState)
 import qualified Data.HashMap.Lazy   as HM
@@ -42,10 +45,10 @@ test1Edges = HM.fromList
             , "Cherry" ]) ]
 
 test1Sandpile :: Sandpile
-test1Sandpile = evalState (makeSandpile test1Edges test1Slime) test1Nodes
+test1Sandpile = makeSandpile test1Nodes test1Edges test1Slime
 
-test1Resolve :: NodeAttr Slime
-test1Resolve = evalState resolveSlime test1Sandpile
+test1Resolve :: Sandpile
+test1Resolve = resolveSlime test1Sandpile
 
 test2Nodes :: HashSet Node
 test2Nodes = Set.fromList
@@ -189,17 +192,59 @@ test2Units = HM.fromList
   , ("Xigua", Just Lobber)
   , ("Zucchini", Just Sprayer) ]
 
-test2StaticUnitA :: StaticUnit
-test2StaticUnitA = evalState
-  (makeStaticUnit test2Edges test2Slime test2Units) test2Nodes
+test2StaticUnit :: StaticUnit
+test2StaticUnit = makeStaticUnit test2Nodes test2Edges test2Slime test2Units
 
-test2ResolveA :: NodeAttr Slime
-test2ResolveA = evalState applySprayer test2StaticUnitA
+test2Resolve :: StaticUnit
+test2Resolve = resolveUnits test2StaticUnit
 
-test2StaticUnitB :: StaticUnit
-test2StaticUnitB = evalState
-  (makeStaticUnit test2Edges test2ResolveA test2Units) test2Nodes
+test2TurnNoMove :: StaticUnit
+test2TurnNoMove = removeUnits . resolveSlime . resolveUnits $ test2StaticUnit
 
-test2ResolveB :: NodeAttr Slime
-test2ResolveB = evalState applyLobber test2StaticUnitB
+test3Nodes :: HashSet Node
+test3Nodes = Set.fromList
+  [ "Apricot"
+  , "Banana"
+  , "Cabbage"
+  , "Dates"
+  , "Eggplant"
+  , "Falafel"
+  , "Garlic"
+  , "Halibut"
+  , "Ice Cream"
+  , "Jalapeno" ]
+
+test3Edges :: NodeAttr [Node]
+test3Edges = HM.fromList
+  [ ("Apricot", ["Dates"])
+  , ("Cabbage", ["Falafel"])
+  , ("Eggplant", ["Banana"])
+  , ("Falafel", ["Cabbage"])
+  , ("Garlic", ["Ice Cream"])
+  , ("Halibut", ["Ice Cream"]) ]
+
+test3Units :: NodeAttr (Maybe Unit)
+test3Units = HM.fromList
+  [ ("Apricot", Just Sprayer)
+  , ("Banana", Just Lobber)
+  , ("Cabbage", Just Sprayer)
+  , ("Falafel", Just Lobber)
+  , ("Garlic", Just Sprayer)
+  , ("Halibut", Just Lobber)
+  , ("Jalapeno", Just Sprayer) ]
+
+test3Orders :: NodeAttr (Maybe Node)
+test3Orders = HM.fromList
+  [ ("Apricot", Just "Dates")
+  , ("Banana", Just "Eggplant")
+  , ("Cabbage", Just "Falafel")
+  , ("Falafel", Just "Cabbage")
+  , ("Garlic", Just "Ice Cream")
+  , ("Halibut", Just "Ice Cream") ]
+
+test3Position :: MoveUnit
+test3Position = makeMoveUnit test3Nodes test3Edges test3Units test3Orders
+
+test3Resolve :: MoveUnit
+test3Resolve = resolveOrders test3Position
 

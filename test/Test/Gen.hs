@@ -61,12 +61,8 @@ instance Arbitrary Board where
     then []
     else [ makeBoard ns' es sl un od
       | let (ns, es, sl, un, od) = boardAttrs b
-      , ns' <- delete ns
-        . fmap (HS.fromList . liftToNodeList takeUntilUnique)
-        . subsequences . HS.toList $ ns ]
-      ++ [ makeBoard ns' es sl un od
-      | let (ns, es, sl, un, od) = boardAttrs b
-      , ns' <- delete ns . fmap HS.fromList . subsequences . HS.toList $ ns ]
+      , ns' <- (delete ns . drop 1 . fmap HS.fromList
+        . subsequences . HS.toList $ ns) ++ [HS.empty] ]
 
 instance Function MaybeNat
 instance Function Node

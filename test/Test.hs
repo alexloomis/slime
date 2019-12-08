@@ -3,8 +3,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Board
+import Board.Printer
 import Engine
-import Engine.Print
 import Engine.Test
 import Engine.Util.MaybeNat
 import Test.Gen             ()
@@ -67,8 +67,17 @@ prop_arbitrary_board_node_eq_orders = nodeEquality getOrders
 
 makeableAfter :: (Board -> Board) -> Board -> Property
 makeableAfter res b = classify (b == res b) "trivial" $
-  res b == uncurry5 makeBoard (boardAttrs $ res b)
+  res b === uncurry5 makeBoard (boardAttrs $ res b)
   where uncurry5 f (u,v,w,x,y) = f u v w x y
+
+prop_makeable_after_resolve :: Board -> Property
+prop_makeable_after_resolve b = whenFail' (printBoard b >>= const (print b))
+  . conjoin $
+  [ makeableAfter id b
+  , makeableAfter resolveSlime b
+  , makeableAfter resolveOrders b
+  , makeableAfter resolveUnits b
+  , makeableAfter resolveDeaths b ]
 
 prop_board_makeable_after_resolve_slime :: Board -> Property
 prop_board_makeable_after_resolve_slime = makeableAfter resolveSlime
@@ -79,38 +88,29 @@ prop_board_makeable_after_resolve_orders = makeableAfter resolveOrders
 prop_board_makeable_after_resolve_units :: Board -> Property
 prop_board_makeable_after_resolve_units = makeableAfter resolveUnits
 
--- Fails on: replayStrings 1 2 3
+-- Fails on: replayStrings 1 2 3 4
 prop_board_makeable_after_resolve_deaths :: Board -> Property
-prop_board_makeable_after_resolve_deaths = makeableAfter resolveDeaths
+prop_board_makeable_after_resolve_deaths = withMaxSuccess 1000
+ . makeableAfter resolveDeaths
 
-replayString1 = "Just (SMGen 16607647736078848063 5859287728921095707,38)"
-replayString2 = "Just (SMGen 1150563981264410373 7885607369095724133,83)"
-replayString3 = "Just (SMGen 17252415138407314714 5225726372301396331,59)"
-replayString4 = "Just (SMGen 2061801798427438348 12612330272607078813,98)"
+-- replayString1 = "Just (SMGen 16607647736078848063 5859287728921095707,38)" :: String
+-- replayString2 = "Just (SMGen 1150563981264410373 7885607369095724133,83)" :: String
+-- replayString3 = "Just (SMGen 17252415138407314714 5225726372301396331,59)" :: String
+-- replayString4 = "Just (SMGen 2061801798427438348 12612330272607078813,98)" :: String
 
 {-
-prop_board_makeable_after_resolve_deaths_replay
+prop_board_makeable_after_resolve_deaths_replay_verbose_1
   :: WithQCArgs (Board -> Property)
-prop_board_makeable_after_resolve_deaths_replay =
-  withQCArgs (\a -> a { replay = read replayString3 })
-  prop_board_makeable_after_resolve_deaths
--}
-
-prop_board_makeable_after_resolve_deaths_replay_verbose
-  :: WithQCArgs (Board -> Property)
-prop_board_makeable_after_resolve_deaths_replay_verbose =
+prop_board_makeable_after_resolve_deaths_replay_verbose_1 =
   withQCArgs (\a -> a { replay = read replayString1 })
-  property_test
+  (verboseShrinking . propertyTest)
 
-verboseError b = do
-  printNodes b
-  printEdges b
-  printSlime b
-  printUnits b
-  printOrders b
-  return $ makeableAfter resolveDeaths b
-
-property_test b = ioProperty (verboseError b)
+propertyTest :: Board -> Property
+propertyTest b = ioProperty $ do
+  printBoard b
+  print b
+  return . makeableAfter resolveDeaths $ b
+-}
 
 preserveNodes :: HNodes s => (s -> s) -> s -> Bool
 preserveNodes f s = getNodes s == getNodes (f s)

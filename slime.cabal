@@ -28,16 +28,16 @@ source-repository head
 library
   exposed-modules:
       Board
-    , Board.Sandpile
-    , Board.StaticUnit
+    , Board.Printer
     , Engine
+    , Engine.PackAttr
     , Engine.Print
     , Engine.Slime
     , Engine.Test
     , Engine.Unit
     , Engine.Util.MaybeNat
   other-modules:
-      Board.MoveUnit
+      Board.Partial
     , Engine.Internal.Util
     , Engine.Internal.Type
     , Engine.Slime.Resolve
@@ -53,6 +53,7 @@ library
       base >=4.7 && <5
     , data-default-class
     , extra
+    , graphviz
     , hashable
     , lens
     , mtl
@@ -88,6 +89,7 @@ test-suite slime-test
   build-depends:
       base >=4.7 && <5
     , slime
+    , graphviz
     , HTF
     , lens
     , QuickCheck

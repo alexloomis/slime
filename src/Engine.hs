@@ -1,7 +1,7 @@
 module Engine
   -- from Engine.Internal.Type
   ( Node (..)
-  , NodeAttr (..)
+  , NodeAttr
   , Slime (..)
   , Unit (..)
   , Order (..)
@@ -15,7 +15,9 @@ module Engine
   , getSlime
   , getUnits
   , getOrders
-  -- From Engine.Internal.Util
+  -- from Engine.Internal.Util
+  , getOrDefault
+  -- From Engine.PackAttr
   , PackAttr (..)
   , prePackAttr
   -- From Engine.Slime
@@ -37,6 +39,7 @@ module Engine
 
 import Engine.Internal.Type
 import Engine.Internal.Util
+import Engine.PackAttr
 import Engine.Slime
 import Engine.Unit
 

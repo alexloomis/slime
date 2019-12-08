@@ -7,11 +7,9 @@ module Board.Sandpile
   ) where
 
 import Engine.Internal.Type
-import Engine.Internal.Util
+import Engine.PackAttr
 
 import Control.Lens.Combinators
-import Control.Monad            (liftM3)
-import Control.Monad.State
 import Data.HashSet             (HashSet)
 
 data Sandpile = Sandpile

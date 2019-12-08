@@ -7,7 +7,7 @@ module Board.StaticUnit
   ) where
 
 import Engine.Internal.Type
-import Engine.Internal.Util
+import Engine.PackAttr
 
 import Control.Lens.Combinators
 import Data.HashSet             (HashSet)

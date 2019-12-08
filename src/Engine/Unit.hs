@@ -9,7 +9,7 @@ module Engine.Unit
   ) where
 
 import Engine.Internal.Type
-import Engine.Internal.Util
+import Engine.PackAttr
 import Engine.Unit.Lobber
 import Engine.Unit.Move
 import Engine.Unit.Order

@@ -4,17 +4,15 @@ module Engine.Test
   ( module Engine.Test
   ) where
 
-import Board.MoveUnit
-import Board.Sandpile
-import Board.StaticUnit
+import Board
+import Board.Partial
 import Engine.Internal.Type
 import Engine.Slime.Resolve
 import Engine.Unit
 
-import           Control.Monad.State (evalState)
-import qualified Data.HashMap.Lazy   as HM
-import           Data.HashSet        (HashSet)
-import qualified Data.HashSet        as Set
+import qualified Data.HashMap.Lazy as HM
+import           Data.HashSet      (HashSet)
+import qualified Data.HashSet      as Set
 
 test1Nodes :: HashSet Node
 test1Nodes = Set.fromList
@@ -43,6 +41,17 @@ test1Edges = HM.fromList
             , "Apple"
             , "Blueberry"
             , "Cherry" ]) ]
+
+sbUnits :: NodeAttr (Maybe Unit)
+sbUnits = HM.fromList
+  [ ("Apple", Just Lobber)
+  , ("Cherry", Just Sprayer) ]
+
+sbCommands :: NodeAttr (Maybe Node)
+sbCommands = HM.fromList [ ("Apple", Just "Blueberry") ]
+
+smallBoard :: Board
+smallBoard = makeBoard test1Nodes test1Edges test1Slime sbUnits sbCommands
 
 test1Sandpile :: Sandpile
 test1Sandpile = makeSandpile test1Nodes test1Edges test1Slime

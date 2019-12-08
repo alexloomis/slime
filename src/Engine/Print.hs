@@ -6,7 +6,6 @@ import Engine.Internal.Type
 import qualified Data.HashMap.Lazy as HM
 import qualified Data.HashSet      as HS
 import qualified Data.Text         as T
-import qualified Data.Text.IO      as T
 
 printNodes :: HNodes s => s -> IO ()
 printNodes = print . T.unlines . (:) "NODES:"

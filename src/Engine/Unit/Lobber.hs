@@ -5,15 +5,17 @@ import Engine.Internal.Util
 import Engine.Unit.Util
 
 import           Control.Lens.Combinators
-import           Control.Monad.State
+import           Control.Monad            (liftM2)
 import qualified Data.HashMap.Lazy        as HM
 import           Data.HashSet             (HashSet)
 import qualified Data.HashSet             as Set
 import           Data.List.Extra          (maximumOn)
 
+-- If node is invalid, returns []
 maxNeighbors :: (HEdges s, HSlime s) => s -> Node -> [Node]
 maxNeighbors state node =
-  maximaOn (\n -> HM.lookupDefault 0 n $ view slime state) $ val edges node state
+  maximaOn (\n -> HM.lookupDefault 0 n $ view slime state)
+  $ valOrDefault edges node state
   where
     maximaOn _ [] = []
     maximaOn f xs = filter (\x -> f x == f (maximumOn f xs)) xs

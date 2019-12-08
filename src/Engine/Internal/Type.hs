@@ -27,7 +27,6 @@ module Engine.Internal.Type
   , getSlime
   , getUnits
   , getOrders
-  , val
   ) where
 
 import Engine.Util.MaybeNat
@@ -35,7 +34,7 @@ import Engine.Util.MaybeNat
 import Control.Lens.Combinators
 import Data.Default.Class       (Default (..))
 import Data.Hashable            (Hashable)
-import Data.HashMap.Lazy        (HashMap, (!))
+import Data.HashMap.Lazy        (HashMap)
 import Data.HashSet             (HashSet)
 import Data.String              (IsString)
 import Data.Text                (Text)
@@ -88,7 +87,4 @@ getUnits = view units
 
 getOrders :: HOrders s => s -> NodeAttr (Maybe Node)
 getOrders = view orders
-
-val :: Getting (NodeAttr v) s (NodeAttr v) -> Node -> s -> v
-val field node s = view field s ! node
 

@@ -1,4 +1,3 @@
-{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module Board
@@ -6,12 +5,14 @@ module Board
   , makeBoard
   , emptyBoard
   , boardAttrs
+  , renameNodes
   ) where
 
 import Engine.Internal.Type
-import Engine.Internal.Util
+import Engine.PackAttr
 
 import           Control.Lens.Combinators
+import           Control.Monad            (liftM5)
 import qualified Data.HashMap.Lazy        as HM
 import           Data.HashSet             (HashSet)
 import qualified Data.HashSet             as HS
@@ -33,8 +34,9 @@ makeBoard _nodes _edges _slime _units _orders =
   . packAttr _units
   . packAttr _slime
   . packAttr _edges
-  $ Board {..}
+  $ set nodes _nodes emptyBoard
 
+emptyBoard :: Board
 emptyBoard = Board
   { _nodes = HS.empty
   , _edges = HM.empty
@@ -45,4 +47,13 @@ emptyBoard = Board
 boardAttrs :: Board -> (HashSet Node, NodeAttr [Node], NodeAttr Slime
   , NodeAttr (Maybe Unit), NodeAttr (Maybe Node))
 boardAttrs b = (_nodes b, _edges b, _slime b, _units b, _orders b)
+
+renameNodes :: (Node -> Node) -> Board -> Board
+renameNodes f = liftM5 makeBoard
+  (HS.map f . getNodes)
+  (HM.fromList . fmap (\(n,ns) -> (f n, fmap f ns)) . HM.toList . getEdges)
+  (HM.fromList . fmap (\(n,s) -> (f n, s)) . HM.toList . getSlime)
+  (HM.fromList . fmap (\(n,u) -> (f n, u)) . HM.toList . getUnits)
+  (HM.fromList . fmap (\(n,o) -> (f n, fmap f o)) . HM.toList . getOrders)
+
 

@@ -11,15 +11,18 @@ import           Control.Lens.Combinators
 import           Control.Monad.State
 import qualified Data.HashMap.Lazy        as HM
 
+-- If node is not valid, returns zero.
 numEdgesFrom :: HEdges s => Node -> s -> Slime
-numEdgesFrom node = fromIntegral . length . val edges node
+numEdgesFrom node = fromIntegral . length . valOrDefault edges node
 
+-- If node is not valid, returns zero.
 slimePerEdge :: (HEdges s, HSlime s) => Node -> s -> Slime
-slimePerEdge = (liftM2 . liftM2) divOrZero (val slime) numEdgesFrom
+slimePerEdge = (liftM2 . liftM2) divOrZero (valOrDefault slime) numEdgesFrom
 
+-- If node is not valid, returns zero.
 remainingMap :: (HEdges s, HSlime s) => Node -> s -> Slime
 remainingMap = (liftM3 . liftM3)
-  (\a b c -> a - b * c) (val slime) slimePerEdge numEdgesFrom
+  (\a b c -> a - b * c) (valOrDefault slime) slimePerEdge numEdgesFrom
 
 remainingSlime :: (HEdges s, HSlime s) => s -> NodeAttr Slime
 remainingSlime s = HM.fromList

@@ -10,9 +10,8 @@ import Engine.Slime
 import Engine.Unit.Util
 
 import           Control.Lens.Combinators
-import           Control.Monad.State
+import           Control.Monad            (liftM2)
 import qualified Data.HashMap.Lazy        as HM
-import           Data.HashSet             (HashSet)
 import qualified Data.HashSet             as Set
 
 sprayerDamage :: Slime

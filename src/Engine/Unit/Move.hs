@@ -11,8 +11,6 @@ import Engine.Unit.Util
 import           Control.Lens.Combinators
 import           Control.Monad            (liftM2)
 import qualified Data.HashMap.Lazy        as HM
-import           Data.HashSet             (HashSet)
-import qualified Data.HashSet             as Set
 import           Data.List                (nub)
 import           Data.Maybe               (catMaybes, isNothing, mapMaybe)
 
@@ -35,7 +33,7 @@ newPositions s =
   (HM.fromList . mapMaybe f . HM.toList . view orders . addHolds $ s)
   `HM.union` HM.map (const Nothing) (view units s)
   where
-    f (n1, Just n2) = Just (n2, val units n1 s)
+    f (n1, Just n2) = Just (n2, valOrDefault units n1 s)
     f _             = Nothing
 
 -- |Tries to execute every command.

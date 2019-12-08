@@ -1,32 +1,61 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE OverloadedStrings          #-}
+{-# LANGUAGE StandaloneDeriving         #-}
 module Board.Printer where
 
-import           Board
+import Board
+import Engine
+
+import           Control.Monad     (liftM3)
+import           Data.GraphViz
 import qualified Data.HashMap.Lazy as HM
+import qualified Data.HashSet      as HS
 import qualified Data.Text         as T
+import qualified Data.Text.Lazy.IO as LT
 
+instance Labellable Slime where
+  toLabelValue = toLabelValue . show
+deriving instance PrintDot Node
 
+nodeLs :: Board -> [(Node, Slime)]
+nodeLs b = fmap (\n -> (n, getOrDefault getSlime n b)) . HS.toList . getNodes $ b
 
-{-
--- $ show (iden node) ++ " [label = \"" ++ show (sand node) ++ "\"];"
-printNodes :: NodeMap -> [T.Text]
-printNodes = fmap T.pack . HM.elems . HM.mapWithKey pretty . getMap
-  where pretty iden sand = show iden ++ " [label = \"" ++ show sand ++ "\"];"
+isOrder :: Board -> Node -> Node -> Bool
+isOrder b n1 n2
+  | getOrDefault getOrders n1 b == Just n2 = True
+  | otherwise = False
 
-printEdge :: Edge -> T.Text
-printEdge edge = T.pack
-  $ show (getFrom edge) ++ " -> " ++ show (getTo edge) ++ ";"
+edgeLs :: Board -> [(Node, Node, Bool)]
+edgeLs b = concatMap labeler . HM.toList . getEdges $ b
+  where labeler (n,ns) = [ (n, n2, isOrder b n n2) | n2 <- ns ]
 
-indent :: T.Text -> T.Text
-indent = T.append "  "
+graphParams :: Board -> GraphvizParams Node Slime Bool () Slime
+graphParams b = nonClusteredParams
+  { globalAttributes = globals
+  , fmtNode = nodeFormatter b
+  , fmtEdge = edgeFormatter b }
 
-prePrintGraph :: Sandpile -> [T.Text]
-prePrintGraph pile = printNodes (getNodeMap pile)
-  ++ fmap printEdge (getEdges pile)
+globals :: [GlobalAttributes]
+globals = []
 
-printGraph :: Sandpile -> T.Text
-printGraph pile = T.unlines
-  $ ["digraph Sandpile {"]
-  ++ fmap indent (prePrintGraph pile)
-  ++ ["}"]
--}
+nodeFormatter :: Board -> (Node, Slime) -> Attributes
+nodeFormatter b (n,s) =
+  [ toLabel s
+  , shape $ case getOrDefault getUnits n b of
+      Nothing      -> Ellipse
+      Just Lobber  -> Square
+      Just Sprayer -> Triangle ]
+
+edgeFormatter :: Board -> (Node, Node, Bool) -> Attributes
+edgeFormatter _ (_,_,tf) =
+  [ if tf then arrowTo diamond else arrowTo normal ]
+
+-- |pack . show changes text from unicode characters to escape sequences
+boardToDot :: Board -> DotGraph Node
+boardToDot = liftM3 graphElemsToDot graphParams nodeLs edgeLs
+  . renameNodes (\(Node t) -> Node $ "N: " `T.append` (T.pack . show $ t))
+
+printBoard :: Board -> IO ()
+printBoard = LT.putStrLn . printDotGraph . boardToDot
+

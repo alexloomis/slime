@@ -2,16 +2,17 @@ module Engine
   -- from Engine.Internal.Type
   ( Node (..)
   , NodeAttr
+  , Ends (..)
   , Slime (..)
   , Unit (..)
   , Order (..)
   , HNodes
-  , HEdges
+  , HEnds
   , HSlime
   , HUnits
   , HOrders
   , getNodes
-  , getEdges
+  , getEnds
   , getSlime
   , getUnits
   , getOrders
@@ -21,7 +22,7 @@ module Engine
   , PackAttr (..)
   , prePackAttr
   -- From Engine.Slime
-  , slimePerEdge
+  , slimePerEnd
   , newSlime
   , resolveSlime
   -- from Engine.Unit

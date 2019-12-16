@@ -54,7 +54,7 @@ nodeEquality :: HNodes s => (s -> NodeAttr a) -> s -> Bool
 nodeEquality f s = getNodes s == HM.keysSet (f s)
 
 prop_arbitrary_board_node_eq_edges :: Board -> Bool
-prop_arbitrary_board_node_eq_edges = nodeEquality getEdges
+prop_arbitrary_board_node_eq_edges = nodeEquality getEnds
 
 prop_arbitrary_board_node_eq_slime :: Board -> Bool
 prop_arbitrary_board_node_eq_slime = nodeEquality getSlime
@@ -70,14 +70,15 @@ makeableAfter res b = classify (b == res b) "trivial" $
   res b === uncurry5 makeBoard (boardAttrs $ res b)
   where uncurry5 f (u,v,w,x,y) = f u v w x y
 
+{-
 prop_makeable_after_resolve :: Board -> Property
-prop_makeable_after_resolve b = whenFail' (printBoard b >>= const (print b))
-  . conjoin $
+prop_makeable_after_resolve b = conjoin
   [ makeableAfter id b
   , makeableAfter resolveSlime b
   , makeableAfter resolveOrders b
   , makeableAfter resolveUnits b
   , makeableAfter resolveDeaths b ]
+-}
 
 prop_board_makeable_after_resolve_slime :: Board -> Property
 prop_board_makeable_after_resolve_slime = makeableAfter resolveSlime
@@ -88,34 +89,13 @@ prop_board_makeable_after_resolve_orders = makeableAfter resolveOrders
 prop_board_makeable_after_resolve_units :: Board -> Property
 prop_board_makeable_after_resolve_units = makeableAfter resolveUnits
 
--- Fails on: replayStrings 1 2 3 4
 prop_board_makeable_after_resolve_deaths :: Board -> Property
-prop_board_makeable_after_resolve_deaths = withMaxSuccess 1000
- . makeableAfter resolveDeaths
-
--- replayString1 = "Just (SMGen 16607647736078848063 5859287728921095707,38)" :: String
--- replayString2 = "Just (SMGen 1150563981264410373 7885607369095724133,83)" :: String
--- replayString3 = "Just (SMGen 17252415138407314714 5225726372301396331,59)" :: String
--- replayString4 = "Just (SMGen 2061801798427438348 12612330272607078813,98)" :: String
-
-{-
-prop_board_makeable_after_resolve_deaths_replay_verbose_1
-  :: WithQCArgs (Board -> Property)
-prop_board_makeable_after_resolve_deaths_replay_verbose_1 =
-  withQCArgs (\a -> a { replay = read replayString1 })
-  (verboseShrinking . propertyTest)
-
-propertyTest :: Board -> Property
-propertyTest b = ioProperty $ do
-  printBoard b
-  print b
-  return . makeableAfter resolveDeaths $ b
--}
+prop_board_makeable_after_resolve_deaths = makeableAfter resolveDeaths
 
 preserveNodes :: HNodes s => (s -> s) -> s -> Bool
 preserveNodes f s = getNodes s == getNodes (f s)
 
-prop_pack_attr_preserve_nodes :: NodeAttr [Node] -> Board -> Bool
+prop_pack_attr_preserve_nodes :: NodeAttr Ends -> Board -> Bool
 prop_pack_attr_preserve_nodes e = preserveNodes (packAttr e)
 
 

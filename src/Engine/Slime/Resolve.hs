@@ -1,5 +1,5 @@
 module Engine.Slime.Resolve
-  ( slimePerEdge
+  ( slimePerEnd
   , newSlime
   , resolveSlime
   ) where
@@ -10,33 +10,38 @@ import Engine.Internal.Util
 import           Control.Lens.Combinators
 import           Control.Monad.State
 import qualified Data.HashMap.Lazy        as HM
+import qualified Data.HashSet             as HS
 
 -- If node is not valid, returns zero.
-numEdgesFrom :: HEdges s => Node -> s -> Slime
-numEdgesFrom node = fromIntegral . length . valOrDefault edges node
+numEndsFrom :: HEnds s => Node -> s -> Slime
+numEndsFrom node = fromIntegral . sum . HM.elems . valOrDefault ends node
 
 -- If node is not valid, returns zero.
-slimePerEdge :: (HEdges s, HSlime s) => Node -> s -> Slime
-slimePerEdge = (liftM2 . liftM2) divOrZero (valOrDefault slime) numEdgesFrom
+slimePerEnd :: (HEnds s, HSlime s) => Node -> s -> Slime
+slimePerEnd = (liftM2 . liftM2) divOrZero (valOrDefault slime) numEndsFrom
 
 -- If node is not valid, returns zero.
-remainingMap :: (HEdges s, HSlime s) => Node -> s -> Slime
+remainingMap :: (HEnds s, HSlime s) => Node -> s -> Slime
 remainingMap = (liftM3 . liftM3)
-  (\a b c -> a - b * c) (valOrDefault slime) slimePerEdge numEdgesFrom
+  (\a b c -> a - b * c) (valOrDefault slime) slimePerEnd numEndsFrom
 
-remainingSlime :: (HEdges s, HSlime s) => s -> NodeAttr Slime
+remainingSlime :: (HEnds s, HSlime s) => s -> NodeAttr Slime
 remainingSlime s = HM.fromList
-  . fmap (mapToSnd (`remainingMap` s)) . HM.keys . view edges $ s
-    where mapToSnd f a = (a,f a)
+  . fmap (mapToSnd (`remainingMap` s)) . HM.keys . view ends $ s
+    where mapToSnd f a = (a, f a)
 
-addedSlime :: (HEdges s, HSlime s) => s -> NodeAttr Slime
-addedSlime s = HM.fromListWith (+) . fmap f
-  . concatMap sequence . HM.toList . view edges  $ s
-  where f (a,b) = (b, slimePerEdge a s)
+incomingEnds :: HEnds s => Node -> s -> Ends
+incomingEnds n = HM.mapMaybe (HM.lookup n) . getEnds
 
-newSlime :: (HEdges s, HSlime s) => s -> NodeAttr Slime
+addedSlime :: (HNodes s, HEnds s, HSlime s) => s -> NodeAttr Slime
+addedSlime s = HM.fromList . fmap f . HS.toList . getNodes $ s
+  where
+    f n = (n, sum . HM.elems . g $ incomingEnds n s)
+    g = HM.mapWithKey (\k v -> slimePerEnd k s * fromIntegral v)
+
+newSlime :: (HNodes s, HEnds s, HSlime s) => s -> NodeAttr Slime
 newSlime = liftM2 (HM.unionWith (+)) addedSlime remainingSlime
 
-resolveSlime :: (HEdges s, HSlime s) => s -> s
+resolveSlime :: (HNodes s, HEnds s, HSlime s) => s -> s
 resolveSlime s = set slime (newSlime s) s
 

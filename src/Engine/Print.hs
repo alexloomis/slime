@@ -11,15 +11,17 @@ printNodes :: HNodes s => s -> IO ()
 printNodes = print . T.unlines . (:) "NODES:"
   . fmap nodeName . HS.toList . getNodes
 
-printEdges :: HEdges s => s -> IO ()
-printEdges = print . T.unlines . (:) "EDGES:"
-  . concatMap f . HM.toList . getEdges
+printEnds :: HEnds s => s -> IO ()
+printEnds = print . T.unlines . (:) "ENDS:"
+  . concatMap f . HM.toList . getEnds
   where
-    f (n,ns) =
+    f (n, es) =
       [ "FROM:"
       , nodeName n
       , "TO:" ]
-      ++ fmap nodeName ns
+      ++ fmap (\(k,m) -> nodeName k
+        `T.append` " x "
+        `T.append` (T.pack . show $ m)) (HM.toList es)
 
 printSlime :: HSlime s => s -> IO ()
 printSlime = print . T.unlines . (:) "SLIME:"

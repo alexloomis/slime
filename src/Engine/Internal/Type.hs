@@ -9,13 +9,14 @@
 module Engine.Internal.Type
   ( Node (..)
   , NodeAttr
+  , Ends (..)
   , Slime (..)
   , Unit (..)
   , Order (..)
   , HasNodes (..)
   , HNodes
-  , HasEdges (..)
-  , HEdges
+  , HasEnds (..)
+  , HEnds
   , HasSlime (..)
   , HSlime
   , HasUnits (..)
@@ -23,7 +24,7 @@ module Engine.Internal.Type
   , HasOrders (..)
   , HOrders
   , getNodes
-  , getEdges
+  , getEnds
   , getSlime
   , getUnits
   , getOrders
@@ -31,14 +32,15 @@ module Engine.Internal.Type
 
 import Engine.Util.MaybeNat
 
-import Control.Lens.Combinators
-import Data.Default.Class       (Default (..))
-import Data.Hashable            (Hashable)
-import Data.HashMap.Lazy        (HashMap)
-import Data.HashSet             (HashSet)
-import Data.String              (IsString)
-import Data.Text                (Text)
-import GHC.Generics
+import           Control.Lens.Combinators
+import           Data.Default.Class       (Default (..))
+import           Data.Hashable            (Hashable)
+import           Data.HashMap.Lazy        (HashMap)
+import qualified Data.HashMap.Lazy        as HM
+import           Data.HashSet             (HashSet)
+import           Data.String              (IsString)
+import           Data.Text                (Text)
+import           GHC.Generics
 
 newtype Node = Node {nodeName :: Text}
   deriving newtype (Eq, Hashable, IsString, Ord, Show)
@@ -46,19 +48,22 @@ newtype Node = Node {nodeName :: Text}
 
 type NodeAttr = HashMap Node
 
-newtype Slime = Slime MaybeNat
+newtype Slime = Slime {slimeVal :: MaybeNat}
   deriving newtype (Enum, Eq, Integral, Num, Ord, Real, Show, Read)
   deriving stock Generic
 instance Default Slime where def = Slime 0
 
+type Ends = HashMap Node Int
+instance Default (HashMap a b) where def = HM.empty
+
 data Unit = Sprayer | Lobber deriving (Eq, Generic, Ord, Show)
 
-data Order = Move { src :: Node, dest :: Node}
+data Order = Order { src :: Node, dest :: Node}
   deriving (Eq, Generic, Hashable, Show)
 
 data Dummy = Dummy
   { _nodes  :: HashSet Node
-  , _edges  :: NodeAttr [Node]
+  , _ends   :: NodeAttr Ends
   , _slime  :: NodeAttr Slime
   , _units  :: NodeAttr (Maybe Unit)
   , _orders :: NodeAttr (Maybe Node) }
@@ -67,17 +72,17 @@ $(makeFieldsNoPrefix ''Dummy)
 
 instance HasNodes (HashSet Node) (HashSet Node) where nodes = id
 
-type HNodes a = HasNodes a (HashSet Node)
-type HEdges a = HasEdges a (NodeAttr [Node])
-type HSlime a = HasSlime a (NodeAttr Slime)
-type HUnits a = HasUnits a (NodeAttr (Maybe Unit))
-type HOrders a = HasOrders a (NodeAttr (Maybe Node))
+type HNodes s = HasNodes s (HashSet Node)
+type HEnds s = HasEnds s (NodeAttr Ends)
+type HSlime s = HasSlime s (NodeAttr Slime)
+type HUnits s = HasUnits s (NodeAttr (Maybe Unit))
+type HOrders s = HasOrders s (NodeAttr (Maybe Node))
 
 getNodes :: HNodes s => s -> HashSet Node
 getNodes = view nodes
 
-getEdges :: HEdges s => s -> NodeAttr [Node]
-getEdges = view edges
+getEnds :: HEnds s => s -> NodeAttr Ends
+getEnds = view ends
 
 getSlime :: HSlime s => s -> NodeAttr Slime
 getSlime = view slime

@@ -1,6 +1,7 @@
 module Engine.Unit
   ( resolveUnits
   , removeUnits
+  , removeDeadOrders
   , resolveDeaths
   , lobberTargets
   , sprayerDamage
@@ -20,7 +21,7 @@ import           Control.Monad            (liftM2)
 import qualified Data.HashMap.Lazy        as HM
 import           Data.Maybe               (isNothing)
 
-resolveUnits :: (HNodes a, HEdges a, HSlime a, HUnits a) => a -> a
+resolveUnits :: (HNodes a, HEnds a, HSlime a, HUnits a) => a -> a
 resolveUnits = resolveLobber . resolveSprayer
 
 killUnits :: (HSlime s, HUnits s) => s -> NodeAttr (Maybe Unit)
@@ -44,5 +45,5 @@ removeUnits :: (HSlime s, HUnits s) => s -> s
 removeUnits s = set units (killUnits s) s
 
 resolveDeaths :: (HSlime s, HUnits s, HOrders s) => s -> s
-resolveDeaths = removeUnits . removeDeadOrders
+resolveDeaths = removeDeadOrders . removeUnits
 

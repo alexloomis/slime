@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Engine.Test
@@ -15,7 +16,7 @@ import           Data.HashSet      (HashSet)
 import qualified Data.HashSet      as Set
 
 test1Nodes :: HashSet Node
-test1Nodes = Set.fromList
+test1Nodes =
   [ "Apple"
   , "Blueberry"
   , "Cherry"
@@ -23,44 +24,43 @@ test1Nodes = Set.fromList
   , "Fig" ]
 
 test1Slime :: NodeAttr Slime
-test1Slime = HM.fromList
+test1Slime =
   [ ("Apple", 7)
   , ("Blueberry", 3)
   , ("Cherry", 2)
   , ("Fig", 17)
   , ("Grape", 0) ]
 
-test1Edges :: NodeAttr [Node]
-test1Edges = HM.fromList
-  [ ("Apple", ["Blueberry"])
-  , ("Blueberry", ["Fig"])
-  , ("Elderberry", ["Cherry"])
-  , ("Cherry", [ "Cherry"
-               , "Elderberry" ])
-  , ("Fig", [ "Apple"
-            , "Apple"
-            , "Blueberry"
-            , "Cherry" ]) ]
+test1Ends :: NodeAttr Ends
+test1Ends =
+  [ ("Apple", [("Blueberry", 1)])
+  , ("Blueberry", [("Fig", 1)])
+  , ("Elderberry", [("Cherry", 1)])
+  , ("Cherry", [ ("Cherry", 1)
+               , ("Elderberry", 1) ])
+  , ("Fig", [ ("Apple", 2)
+            , ("Blueberry", 1)
+            , ("Cherry", 1) ]) ]
 
 sbUnits :: NodeAttr (Maybe Unit)
-sbUnits = HM.fromList
+sbUnits =
   [ ("Apple", Just Lobber)
   , ("Cherry", Just Sprayer) ]
 
 sbCommands :: NodeAttr (Maybe Node)
-sbCommands = HM.fromList [ ("Apple", Just "Blueberry") ]
+sbCommands = [ ("Apple", Just "Blueberry") ]
 
 smallBoard :: Board
-smallBoard = makeBoard test1Nodes test1Edges test1Slime sbUnits sbCommands
+smallBoard = makeBoard test1Nodes test1Ends test1Slime sbUnits sbCommands
 
 test1Sandpile :: Sandpile
-test1Sandpile = makeSandpile test1Nodes test1Edges test1Slime
+test1Sandpile = makeSandpile test1Nodes test1Ends test1Slime
 
 test1Resolve :: Sandpile
 test1Resolve = resolveSlime test1Sandpile
 
 test2Nodes :: HashSet Node
-test2Nodes = Set.fromList
+test2Nodes =
   [ "Hazelnut"
   , "Iceberg Lettuce"
   , "Jackfruit"
@@ -81,89 +81,89 @@ test2Nodes = Set.fromList
   , "Yam"
   , "Zucchini" ]
 
-test2Edges :: NodeAttr [Node]
-test2Edges = HM.fromList
+test2Ends :: NodeAttr Ends
+test2Ends =
   [ ( "Hazelnut",
-    [ "Iceberg Lettuce"
-    , "Lemon" ]
+    [ ("Iceberg Lettuce", 1)
+    , ("Lemon", 1) ]
     )
   , ( "Iceberg Lettuce",
-    [ "Hazelnut"
-    , "Mango"
-    , "Jackfruit" ]
+    [ ("Hazelnut", 1)
+    , ("Mango", 1)
+    , ("Jackfruit", 1) ]
     )
   , ( "Jackfruit",
-    [ "Iceberg Lettuce"
-    , "Nectarine"
-    , "Kiwi" ]
+    [ ("Iceberg Lettuce", 1)
+    , ("Nectarine", 1)
+    , ("Kiwi", 1) ]
     )
   , ( "Kiwi",
-    [ "Jackfruit"
-    , "Orange" ]
+    [ ("Jackfruit", 1)
+    , ("Orange", 1) ]
     )
   , ( "Lemon",
-    [ "Hazelnut"
-    , "Mango"
-    , "Peach" ]
+    [ ("Hazelnut", 1)
+    , ("Mango", 1)
+    , ("Peach", 1) ]
     )
   , ( "Mango",
-    [ "Lemon"
-    , "Iceberg Lettuce"
-    , "Nectarine"
-    , "Quince" ]
+    [ ("Lemon", 1)
+    , ("Iceberg Lettuce", 1)
+    , ("Nectarine", 1)
+    , ("Quince", 1) ]
     )
   , ( "Nectarine",
-    [ "Mango"
-    , "Jackfruit"
-    , "Orange"
-    , "Rutabaga" ]
+    [ ("Mango", 1)
+    , ("Jackfruit", 1)
+    , ("Orange", 1)
+    , ("Rutabaga", 1) ]
     )
   , ( "Orange",
-    [ "Nectarine"
-    , "Kiwi"
-    , "Squash" ]
+    [ ("Nectarine", 1)
+    , ("Kiwi", 1)
+    , ("Squash", 1) ]
     )
   , ( "Peach",
-    [ "Lemon"
-    , "Quince"
-    , "Turnip" ]
+    [ ("Lemon", 1)
+    , ("Quince", 1)
+    , ("Turnip", 1) ]
     )
   , ( "Quince",
-    [ "Peach"
-    , "Mango"
-    , "Rutabaga"
-    , "Ugli Fruit" ]
+    [ ("Peach", 1)
+    , ("Mango", 1)
+    , ("Rutabaga", 1)
+    , ("Ugli Fruit", 1) ]
     )
   , ( "Rutabaga",
-    [ "Quince"
-    , "Nectarine"
-    , "Squash"
-    , "Vanilla" ]
+    [ ("Quince", 1)
+    , ("Nectarine", 1)
+    , ("Squash", 1)
+    , ("Vanilla", 1) ]
     )
   , ( "Squash",
-    [ "Rutabaga"
-    , "Orange"
-    , "Watermellon" ]
+    [ ("Rutabaga", 1)
+    , ("Orange", 1)
+    , ("Watermellon", 1) ]
     )
   , ( "Turnip",
-    [ "Peach"
-    , "Ugli Fruit" ]
+    [ ("Peach", 1)
+    , ("Ugli Fruit", 1) ]
     )
   , ( "Ugli Fruit",
-    [ "Turnip"
-    , "Quince"
-    , "Vanilla" ]
+    [ ("Turnip", 1)
+    , ("Quince", 1)
+    , ("Vanilla", 1) ]
     )
   , ( "Vanilla",
-    [ "Ugli Fruit"
-    , "Rutabaga"
-    , "Watermellon" ]
+    [ ("Ugli Fruit", 1)
+    , ("Rutabaga", 1)
+    , ("Watermellon", 1) ]
     )
   , ( "Watermellon",
-    [ "Squash" ]
+    [ ("Squash", 1) ]
     )
   , ( "Yam",
-    [ "Xigua" ]
+    [ ("Xigua", 1) ]
     )
   ]
 
@@ -189,7 +189,7 @@ test2Slime = HM.fromList
   , ("Zucchini", 1) ]
 
 test2Units :: NodeAttr (Maybe Unit)
-test2Units = HM.fromList
+test2Units =
   [ ("Dog food", Just Lobber)
   , ("Hazelnut", Just Sprayer)
   , ("Kiwi", Just Sprayer)
@@ -202,7 +202,7 @@ test2Units = HM.fromList
   , ("Zucchini", Just Sprayer) ]
 
 test2StaticUnit :: StaticUnit
-test2StaticUnit = makeStaticUnit test2Nodes test2Edges test2Slime test2Units
+test2StaticUnit = makeStaticUnit test2Nodes test2Ends test2Slime test2Units
 
 test2Resolve :: StaticUnit
 test2Resolve = resolveUnits test2StaticUnit
@@ -223,14 +223,14 @@ test3Nodes = Set.fromList
   , "Ice Cream"
   , "Jalapeno" ]
 
-test3Edges :: NodeAttr [Node]
-test3Edges = HM.fromList
-  [ ("Apricot", ["Dates"])
-  , ("Cabbage", ["Falafel"])
-  , ("Eggplant", ["Banana"])
-  , ("Falafel", ["Cabbage"])
-  , ("Garlic", ["Ice Cream"])
-  , ("Halibut", ["Ice Cream"]) ]
+test3Ends :: NodeAttr Ends
+test3Ends = HM.fromList
+  [ ("Apricot", [("Dates", 1)])
+  , ("Cabbage", [("Falafel", 1)])
+  , ("Eggplant", [("Banana", 1)])
+  , ("Falafel", [("Cabbage", 1)])
+  , ("Garlic", [("Ice Cream", 1)])
+  , ("Halibut", [("Ice Cream", 1)]) ]
 
 test3Units :: NodeAttr (Maybe Unit)
 test3Units = HM.fromList
@@ -252,7 +252,7 @@ test3Orders = HM.fromList
   , ("Halibut", Just "Ice Cream") ]
 
 test3Position :: MoveUnit
-test3Position = makeMoveUnit test3Nodes test3Edges test3Units test3Orders
+test3Position = makeMoveUnit test3Nodes test3Ends test3Units test3Orders
 
 test3Resolve :: MoveUnit
 test3Resolve = resolveOrders test3Position

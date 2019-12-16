@@ -14,14 +14,14 @@ import Data.HashSet             (HashSet)
 
 data Sandpile = Sandpile
   { _nodes :: HashSet Node
-  , _edges :: NodeAttr [Node]
+  , _ends :: NodeAttr [Node]
   , _slime :: NodeAttr Slime
   } deriving (Show)
 
 $(makeFieldsNoPrefix ''Sandpile)
 
 makeSandpile :: HashSet Node -> NodeAttr [Node] -> NodeAttr Slime -> Sandpile
-makeSandpile _nodes _edges _slime =
-  packAttr _slime . packAttr _edges $ Sandpile {..}
+makeSandpile _nodes _ends _slime =
+  packAttr _slime . packAttr _ends $ Sandpile {..}
 
 

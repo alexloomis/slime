@@ -27,13 +27,16 @@ maskWith f m n = HM.unionWith f (HM.intersection m n) n
 allDefault :: (HNodes s, Default v) => s -> NodeAttr v
 allDefault = HM.map (const def) . Set.toMap . view nodes
 
-filterNodes :: HNodes s => s -> [Node] -> [Node]
-filterNodes s = filter (`Set.member` view nodes s)
+filterEnds :: HNodes s => s -> Ends -> Ends
+filterEnds s = HM.fromList . filter predicate . HM.toList
+  where
+    predicate (n,x) = x >= 0
+      && n `Set.member` view nodes s
 
 prePackAttr :: (Default v, HNodes s) => NodeAttr v -> s -> NodeAttr v
 prePackAttr a = mask a . allDefault
 
-foldOrders :: (HNodes s, HEdges s, HUnits s, HOrders s)
+foldOrders :: (HNodes s, HEnds s, HUnits s, HOrders s)
   => NodeAttr (Maybe Node) -> s -> s
 foldOrders a s = foldl (flip giveOrder) s (attrToOrders a)
 
@@ -43,15 +46,15 @@ class PackAttr s a where
   default packAttr :: (Default a, HNodes s) => NodeAttr a -> s -> s
   packAttr a = liftM2 unsafePackAttr (prePackAttr a) id
 
-instance (HNodes s, HEdges s) => PackAttr s [Node] where
-  unsafePackAttr = set edges
+instance (HNodes s, HEnds s) => PackAttr s Ends where
+  unsafePackAttr = set ends
   packAttr a s = unsafePackAttr
-    (maskWith (const . filterNodes s) a $ allDefault s) s
+    (maskWith (const . filterEnds s) a $ allDefault s) s
 instance (HNodes s, HSlime s) => PackAttr s Slime where
   unsafePackAttr = set slime
 instance (HNodes s, HUnits s) => PackAttr s (Maybe Unit) where
   unsafePackAttr = set units
-instance (HNodes s, HEdges s, HUnits s, HOrders s)
+instance (HNodes s, HEnds s, HUnits s, HOrders s)
   => PackAttr s (Maybe Node) where
   unsafePackAttr = set orders
   packAttr a s = foldOrders a s'

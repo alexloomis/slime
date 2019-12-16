@@ -23,10 +23,16 @@ attrGen ns = do
   aVals <- arbitrary
   return . HM.fromList . zip chosenNs $ aVals
 
-edgeGen :: [Node] -> Gen (NodeAttr [Node])
-edgeGen ns = do
+endsPreGen :: [Node] -> Gen Ends
+endsPreGen ns = do
+  ends <- shuffle ns >>= sublistOf
+  vals <- arbitrary
+  return . HM.fromList . zip ends $ vals
+
+endsGen :: [Node] -> Gen (NodeAttr Ends)
+endsGen ns = do
   starts <- shuffle ns >>= sublistOf
-  ends <- promote . fmap (listOf . elements) $ repeat ns
+  ends <- listOf $ endsPreGen ns
   return . HM.fromList . zip starts $ ends
 
 allUnique :: Eq a => [a] -> Bool
@@ -44,6 +50,12 @@ takeUntilUnique ts =
 liftToNodeList :: ([T.Text] -> [T.Text]) -> [Node] -> [Node]
 liftToNodeList f = fmap Node . f . fmap nodeName
 
+orderGen :: [Node] -> Gen (NodeAttr (Maybe Node))
+orderGen ns = do
+  starts <- shuffle ns >>= sublistOf
+  ends <- listOf . liftArbitrary . elements $ ns
+  return . HM.fromList . zip starts $ ends
+
 instance Arbitrary MaybeNat where
   arbitrary = frequency [(1, return MErr), (100, fmap MNat arbitrary)]
   shrink MErr = []
@@ -56,7 +68,7 @@ instance Arbitrary Order where
   arbitrary = liftM2 Move arbitrary arbitrary
 instance Arbitrary Board where
   arbitrary = arbitrary >>= (liftM5 . liftM5) makeBoard
-    (return . HS.fromList) edgeGen attrGen attrGen attrGen
+    (return . HS.fromList) endsGen attrGen attrGen orderGen
   shrink b = if b == emptyBoard
     then []
     else [ makeBoard ns' es sl un od

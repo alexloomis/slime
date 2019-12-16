@@ -36,6 +36,8 @@ library
     , Engine.Test
     , Engine.Unit
     , Engine.Util.MaybeNat
+    , Interface
+    , Parser.Ingame
   other-modules:
       Board.Partial
     , Engine.Internal.Util
@@ -53,9 +55,11 @@ library
       base >=4.7 && <5
     , data-default-class
     , extra
+    , filepath
     , graphviz
     , hashable
     , lens
+    , megaparsec
     , mtl
     , text
     , unordered-containers

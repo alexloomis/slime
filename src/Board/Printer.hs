@@ -1,10 +1,8 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 module Board.Printer where
 
-import Board
 import Engine
 
 import           Control.Monad     (liftM3)
@@ -18,28 +16,32 @@ instance Labellable Slime where
   toLabelValue = toLabelValue . show
 deriving instance PrintDot Node
 
-nodeLs :: Board -> [(Node, Slime)]
+nodeLs :: (HNodes s, HSlime s) => s -> [(Node, Slime)]
 nodeLs b = fmap (\n -> (n, getOrDefault getSlime n b)) . HS.toList . getNodes $ b
 
-isOrder :: Board -> Node -> Node -> Bool
+isOrder :: HOrders s => s -> Node -> Node -> Bool
 isOrder b n1 n2
   | getOrDefault getOrders n1 b == Just n2 = True
   | otherwise = False
 
-edgeLs :: Board -> [(Node, Node, Bool)]
-edgeLs b = concatMap labeler . HM.toList . getEdges $ b
-  where labeler (n,ns) = [ (n, n2, isOrder b n n2) | n2 <- ns ]
+endLs :: HEnds s => s -> [(Node, Node, Int)]
+endLs = concatMap flatten . HM.toList . HM.map HM.toList . getEnds
+  where
+    flatten (n1, kvs) =
+      [ (n1, n2, m)
+      | (n2,m) <- kvs ]
 
-graphParams :: Board -> GraphvizParams Node Slime Bool () Slime
+graphParams :: (HUnits s, HOrders s)
+  => s -> GraphvizParams Node Slime Int () Slime
 graphParams b = nonClusteredParams
   { globalAttributes = globals
   , fmtNode = nodeFormatter b
-  , fmtEdge = edgeFormatter b }
+  , fmtEdge = endFormatter b }
 
 globals :: [GlobalAttributes]
 globals = []
 
-nodeFormatter :: Board -> (Node, Slime) -> Attributes
+nodeFormatter :: HUnits s => s -> (Node, Slime) -> Attributes
 nodeFormatter b (n,s) =
   [ toLabel s
   , shape $ case getOrDefault getUnits n b of
@@ -47,15 +49,17 @@ nodeFormatter b (n,s) =
       Just Lobber  -> Square
       Just Sprayer -> Triangle ]
 
-edgeFormatter :: Board -> (Node, Node, Bool) -> Attributes
-edgeFormatter _ (_,_,tf) =
-  [ if tf then arrowTo diamond else arrowTo normal ]
+endFormatter :: HOrders s => s -> (Node, Node, Int) -> Attributes
+endFormatter b (n1,n2,m) =
+  [ if isOrder b n1 n2 then arrowTo diamond else arrowTo normal
+  , toLabel m ]
 
 -- |pack . show changes text from unicode characters to escape sequences
-boardToDot :: Board -> DotGraph Node
-boardToDot = liftM3 graphElemsToDot graphParams nodeLs edgeLs
-  . renameNodes (\(Node t) -> Node $ "N: " `T.append` (T.pack . show $ t))
+boardToDot :: (HNodes s, HEnds s, HSlime s, HUnits s, HOrders s)
+  => s -> DotGraph Node
+boardToDot = liftM3 graphElemsToDot graphParams nodeLs endLs
 
-printBoard :: Board -> IO ()
+printBoard :: (HNodes s, HEnds s, HSlime s, HUnits s, HOrders s)
+  => s -> IO ()
 printBoard = LT.putStrLn . printDotGraph . boardToDot
 

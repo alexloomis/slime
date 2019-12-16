@@ -1,4 +1,11 @@
 module Main where
 
-main :: IO ()
-main = undefined
+import Board       (Board)
+import Engine.Test
+import Interface
+
+import qualified Data.Text.IO as T
+
+main :: IO Board
+main = loop smallBoard
+

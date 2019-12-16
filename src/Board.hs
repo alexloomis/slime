@@ -1,4 +1,5 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Board
   ( Board
@@ -8,18 +9,22 @@ module Board
   , renameNodes
   ) where
 
+import Board.Printer
+import Engine
 import Engine.Internal.Type
 import Engine.PackAttr
+import Interface
 
 import           Control.Lens.Combinators
 import           Control.Monad            (liftM5)
 import qualified Data.HashMap.Lazy        as HM
 import           Data.HashSet             (HashSet)
 import qualified Data.HashSet             as HS
+import qualified Data.Text                as T
 
 data Board = Board
   { _nodes  :: HashSet Node
-  , _edges  :: NodeAttr [Node]
+  , _ends   :: NodeAttr Ends
   , _slime  :: NodeAttr Slime
   , _units  :: NodeAttr (Maybe Unit)
   , _orders :: NodeAttr (Maybe Node)
@@ -27,33 +32,40 @@ data Board = Board
 
 $(makeFieldsNoPrefix ''Board)
 
-makeBoard :: HashSet Node -> NodeAttr [Node] -> NodeAttr Slime
+instance GameState Board where
+  showState = printBoard
+    . renameNodes (\(Node t) -> Node $ "N: " `T.append` (T.pack . show $ t))
+  endTurn = resolveDeaths . resolveSlime . resolveUnits . resolveOrders
+
+makeBoard :: HashSet Node -> NodeAttr Ends -> NodeAttr Slime
   -> NodeAttr (Maybe Unit) -> NodeAttr (Maybe Node) -> Board
-makeBoard _nodes _edges _slime _units _orders =
+makeBoard _nodes _ends _slime _units _orders =
   packAttr _orders
   . packAttr _units
   . packAttr _slime
-  . packAttr _edges
+  . packAttr _ends
   $ set nodes _nodes emptyBoard
 
 emptyBoard :: Board
 emptyBoard = Board
   { _nodes = HS.empty
-  , _edges = HM.empty
+  , _ends = HM.empty
   , _slime = HM.empty
   , _units = HM.empty
   , _orders = HM.empty }
 
-boardAttrs :: Board -> (HashSet Node, NodeAttr [Node], NodeAttr Slime
+boardAttrs :: Board -> (HashSet Node, NodeAttr Ends, NodeAttr Slime
   , NodeAttr (Maybe Unit), NodeAttr (Maybe Node))
-boardAttrs b = (_nodes b, _edges b, _slime b, _units b, _orders b)
+boardAttrs b = (_nodes b, _ends b, _slime b, _units b, _orders b)
+
+renameKeys :: (Node -> Node) -> NodeAttr a -> NodeAttr a
+renameKeys f = HM.fromList . fmap (\(k,v) -> (f k, v)) . HM.toList
 
 renameNodes :: (Node -> Node) -> Board -> Board
 renameNodes f = liftM5 makeBoard
   (HS.map f . getNodes)
-  (HM.fromList . fmap (\(n,ns) -> (f n, fmap f ns)) . HM.toList . getEdges)
-  (HM.fromList . fmap (\(n,s) -> (f n, s)) . HM.toList . getSlime)
-  (HM.fromList . fmap (\(n,u) -> (f n, u)) . HM.toList . getUnits)
-  (HM.fromList . fmap (\(n,o) -> (f n, fmap f o)) . HM.toList . getOrders)
-
+  (HM.map (renameKeys f) . renameKeys f . getEnds)
+  (renameKeys f . getSlime)
+  (renameKeys f . getUnits)
+  (HM.map (fmap f) . renameKeys f . getOrders)
 

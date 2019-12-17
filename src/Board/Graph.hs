@@ -9,7 +9,6 @@ import           Control.Monad     (liftM3)
 import           Data.GraphViz
 import qualified Data.HashMap.Lazy as HM
 import qualified Data.HashSet      as HS
-import qualified Data.Text         as T
 import qualified Data.Text.Lazy.IO as LT
 
 instance Labellable Slime where

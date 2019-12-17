@@ -4,26 +4,24 @@ module Parser.Save
   ( parseSave
   ) where
 
-import Board
 import Engine
 import Engine.Util.MaybeNat
 
 import           Control.Monad              (void)
 import           Control.Monad.Identity     (Identity)
-import           Data.Char                  (isAlphaNum, isDigit, isSpace)
+import           Data.Char                  (isAlphaNum, isDigit)
 import qualified Data.HashMap.Lazy          as HM
 import           Data.HashSet               (HashSet)
 import qualified Data.HashSet               as HS
-import           Data.Text                  (Text, append, pack, unpack)
+import           Data.Text                  (Text, unpack)
 import           Data.Void                  (Void)
-import           System.FilePath
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
 import qualified Text.Megaparsec.Char.Lexer as L
 
 type Parser = ParsecT Void Text Identity
 
-data Heading = HNodes | HEnds | HSlime | HUnits | HOrders
+-- data Heading = HNodes | HEnds | HSlime | HUnits | HOrders
 
 -- |Eats nonzero amount of whitespace.
 spaceConsumer :: Parser ()
@@ -75,7 +73,7 @@ edgeWeight = do
   notFollowedBy (node >> symbol "->")
   n <- node
   m <- optional $ do
-    symbol "#"
+    _ <- symbol "#"
     weight
   return $ case m of
     Nothing -> (n, 1)
@@ -92,28 +90,28 @@ edgeTo = do
 parseEndLine :: Parser (Node, Ends)
 parseEndLine = do
   n <- node
-  symbol "->"
+  _ <- symbol "->"
   e <- edgeTo
   return (n,e)
 
 parseSlimeLine :: Parser (Node, Slime)
 parseSlimeLine = do
   n <- node
-  symbol "->"
+  _ <- symbol "->"
   s <- slime
   return (n,s)
 
 parseUnitLine :: Parser (Node, Maybe Unit)
 parseUnitLine = do
   n <- node
-  symbol "->"
+  _ <- symbol "->"
   u <- unit
   return (n, Just u)
 
 parseOrderLine :: Parser (Node, Maybe Node)
 parseOrderLine = do
   n1 <- node
-  symbol "->"
+  _ <- symbol "->"
   n2 <- node
   return (n1, Just n2)
 
@@ -123,6 +121,7 @@ parseNodes = do
   lookAhead (eof <|> heading)
   return . HS.fromList $ ns
 
+parseAttr :: Parser (Node, v) -> Parser (NodeAttr v)
 parseAttr p = do
   ls <- many (lexeme p)
   lookAhead (eof <|> heading)
@@ -144,7 +143,9 @@ parseOrders :: Parser (NodeAttr (Maybe Node))
 parseOrders = parseAttr parseOrderLine
 
 -- |Currently requires Nodes, Edges, Slime, Units, Orders, in order.
-parseSave :: Parser Board
+parseSave :: Parser
+  (HashSet Node, NodeAttr Ends, NodeAttr Slime,
+  NodeAttr (Maybe Unit), NodeAttr (Maybe Node))
 parseSave = do
   hidden space
   heading
@@ -158,12 +159,13 @@ parseSave = do
   heading
   os <- parseOrders
   eof
-  return $ makeBoard ns es sl us os
+  return (ns, es, sl, us, os)
 
 --------------------------
 -- For testing
 --------------------------
 
+{-
 tnodes :: Text
 tnodes = "Cherry\nDurian\nBlueberry\nFig\nApple\n\n"
 
@@ -178,4 +180,5 @@ tunits = "Cherry -> Sprayer\nApple -> Lobber\n\n"
 
 torders :: Text
 torders = "Apple -> Blueberry\n\n"
+-}
 

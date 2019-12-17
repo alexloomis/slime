@@ -1,28 +1,18 @@
 {-# LANGUAGE DefaultSignatures    #-}
 {-# LANGUAGE UndecidableInstances #-}
-module Engine.PackAttr where
+module Engine.PackAttr
+  ( PackAttr (..)
+  ) where
 
 import Engine.Internal.Type
+import Engine.Internal.Util
 import Engine.Unit.Order
 
 import           Control.Lens.Combinators
 import           Control.Monad.State
 import           Data.Default.Class       (Default (..))
-import           Data.Hashable            (Hashable)
-import           Data.HashMap.Lazy        (HashMap)
 import qualified Data.HashMap.Lazy        as HM
 import qualified Data.HashSet             as Set
-
--- Change values in the second map to values from the first,
--- when they exist, without adding extra keys.
-mask :: (Eq k, Hashable k) => HashMap k v -> HashMap k v -> HashMap k v
-mask m n = HM.union (HM.intersection m n) n
-
--- Combine as mask, with a function applied to matching keys.
--- Uses ∪-with f (∩ A B) B, which should equal ∪ (∩-with f A B) B.
-maskWith :: (Eq k, Hashable k)
-  => (v -> v -> v) -> HashMap k v -> HashMap k v -> HashMap k v
-maskWith f m n = HM.unionWith f (HM.intersection m n) n
 
 allDefault :: (HNodes s, Default v) => s -> NodeAttr v
 allDefault = HM.map (const def) . Set.toMap . view nodes

@@ -36,6 +36,7 @@ library
     , Engine.Test
     , Engine.Unit
     , Engine.Util.MaybeNat
+    , GameState
     , Interface
     , Parser.Ingame
     , Parser.Save

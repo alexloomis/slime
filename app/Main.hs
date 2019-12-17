@@ -1,11 +1,8 @@
 module Main where
 
-import Board       (Board)
-import Engine.Test
-import Interface
-
-import qualified Data.Text.IO as T
+import Board     (Board, emptyBoard)
+import Interface (loop)
 
 main :: IO Board
-main = putStrLn "Ready." >> loop smallBoard
+main = putStrLn "Ready." >> loop emptyBoard
 

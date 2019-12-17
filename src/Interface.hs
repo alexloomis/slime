@@ -1,29 +1,18 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Interface
-  (
-  loop
+  ( loop
   ) where
 
-import Board
 import Engine
-import Engine.Print
+import GameState
 import Parser.Ingame
-import Parser.Save
 
-import           Data.Text        (Text)
-import qualified Data.Text        as T
 import qualified Data.Text.IO     as T
 import           GHC.IO.Handle.FD (stdin)
 import           Text.Megaparsec  (errorBundlePretty, runParser)
 
-endTurn = resolveDeaths . resolveSlime . resolveUnits . resolveOrders
-showState s = T.unlines [printNodes s, printEnds s,
-  printSlime s, printUnits s, printOrders s]
-prettyState = printBoard
-  . renameNodes (\(Node t) -> Node $ "N: " `T.append` (T.pack . show $ t))
-
-move :: Order -> Board -> IO Board
+move :: GameState s => Order -> s -> IO s
 move newOrder@(Order n1 _) s = case checkOrder newOrder s of
   -- If everything works, add order.
   Right order -> do
@@ -40,34 +29,34 @@ move newOrder@(Order n1 _) s = case checkOrder newOrder s of
   where
     giveMsg m = T.putStrLn m >> return s
 
-clear :: Node -> Board -> IO Board
+clear :: GameState s => Node -> s -> IO s
 clear n s = T.putStrLn "Order cleared." >> return (clearOrderFrom n s)
 
-save :: FilePath -> Board -> IO Board
-save fp s = T.writeFile fp (showState s) >> T.putStrLn "File saved." >> return s
+save :: GameState s => FilePath -> s -> IO s
+save fp s = T.writeFile fp (showGame s) >> T.putStrLn "File saved." >> return s
 
-load :: FilePath -> Board -> IO Board
+load :: GameState s => FilePath -> s -> IO s
 load fp s = do
   input <- T.readFile fp
-  case runParser parseSave fp input of
+  case runParser parseGame fp input of
     Left err -> do
       putStrLn . errorBundlePretty $ err
       return s
     Right new -> T.putStrLn "File loaded." >> return new
 
-quit :: Board -> IO Board
+quit :: GameState s => s -> IO s
 quit s = T.putStrLn "Bye!" >> return s
 
-showS :: Board -> IO Board
-showS s = T.putStrLn (showState s) >> return s
+showS :: GameState s => s -> IO s
+showS s = T.putStrLn (showGame s) >> return s
 
-peek :: Board -> IO Board
-peek s = T.putStrLn (showState (endTurn s)) >> return s
+peek :: GameState s => s -> IO s
+peek s = T.putStrLn (showGame (endTurn s)) >> return s
 
-done :: Board -> IO Board
+done :: GameState s => s -> IO s
 done s = T.putStrLn "Ending turn." >> return (endTurn s)
 
-loop :: Board -> IO Board
+loop :: GameState s => s -> IO s
 loop s = do
   input <- T.hGetLine stdin
   case runParser command "" input of

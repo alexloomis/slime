@@ -13,14 +13,15 @@ module Board
 import Board.Graph
 import Engine
 import Engine.Internal.Type
-import Engine.PackAttr
+import Engine.PackAttr      ()
+import GameState
+import Parser.Save
 
 import           Control.Lens.Combinators
 import           Control.Monad            (liftM5)
 import qualified Data.HashMap.Lazy        as HM
 import           Data.HashSet             (HashSet)
 import qualified Data.HashSet             as HS
-import qualified Data.Text                as T
 
 data Board = Board
   { _nodes  :: HashSet Node
@@ -63,4 +64,8 @@ renameNodes f = liftM5 makeBoard
   (renameKeys f . getSlime)
   (renameKeys f . getUnits)
   (HM.map (fmap f) . renameKeys f . getOrders)
+
+instance GameState Board where
+  parseGame = uncurry5 makeBoard <$> parseSave
+    where uncurry5 f (a,b,c,d,e) = f a b c d e
 

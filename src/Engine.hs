@@ -1,8 +1,8 @@
 module Engine
-  -- from Engine.Internal.Type
+  -- *From Engine.Internal.Type
   ( Node (..)
   , NodeAttr
-  , Ends (..)
+  , Ends
   , Slime (..)
   , Unit (..)
   , Order (..)
@@ -16,16 +16,16 @@ module Engine
   , getSlime
   , getUnits
   , getOrders
-  -- from Engine.Internal.Util
+  -- *From Engine.Internal.Util
   , getOrDefault
-  -- From Engine.PackAttr
+  -- *From Engine.PackAttr
   , PackAttr (..)
-  , prePackAttr
-  -- From Engine.Slime
+  -- , prePackAttr
+  -- *From Engine.Slime
   , slimePerEnd
   , newSlime
   , resolveSlime
-  -- from Engine.Unit
+  -- *From Engine.Unit
   , resolveOrders
   , resolveUnits
   , resolveDeaths

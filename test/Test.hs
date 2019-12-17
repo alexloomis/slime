@@ -3,7 +3,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 import Board
-import Board.Printer
 import Engine
 import Engine.Test
 import Engine.Util.MaybeNat

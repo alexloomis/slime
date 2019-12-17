@@ -1,3 +1,4 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE ConstraintKinds            #-}
 {-# LANGUAGE DeriveAnyClass             #-}
 {-# LANGUAGE DeriveGeneric              #-}
@@ -9,7 +10,7 @@
 module Engine.Internal.Type
   ( Node (..)
   , NodeAttr
-  , Ends (..)
+  , Ends
   , Slime (..)
   , Unit (..)
   , Order (..)

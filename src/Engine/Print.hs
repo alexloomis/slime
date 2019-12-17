@@ -1,56 +1,53 @@
 {-# LANGUAGE OverloadedStrings #-}
 module Engine.Print where
 
+import Prelude hiding (unlines)
+
 import Engine.Internal.Type
+import Engine.Util.MaybeNat
 
 import qualified Data.HashMap.Lazy as HM
 import qualified Data.HashSet      as HS
+import           Data.Text         (Text, append, pack, unlines)
 import qualified Data.Text         as T
 
-printNodes :: HNodes s => s -> IO ()
-printNodes = print . T.unlines . (:) "NODES:"
+printNodes :: HNodes s => s -> Text
+printNodes = unlines . (:) "[NODES]"
   . fmap nodeName . HS.toList . getNodes
 
-printEnds :: HEnds s => s -> IO ()
-printEnds = print . T.unlines . (:) "ENDS:"
+printEnds :: HEnds s => s -> Text
+printEnds = unlines . (:) "[EDGES]"
   . concatMap f . HM.toList . getEnds
   where
-    f (n, es) =
-      [ "FROM:"
-      , nodeName n
-      , "TO:" ]
-      ++ fmap (\(k,m) -> nodeName k
-        `T.append` " x "
-        `T.append` (T.pack . show $ m)) (HM.toList es)
+    f (n, es) = if es == HM.empty
+      then []
+      else (nodeName n `append` " ->")
+        : fmap showMult (HM.toList es)
+    showMult (k,m) = case m of
+      1 -> "  " `append` nodeName k
+      _ -> "  "
+        `append` nodeName k
+        `append` " # "
+        `append` (T.pack . show $ m)
 
-printSlime :: HSlime s => s -> IO ()
-printSlime = print . T.unlines . (:) "SLIME:"
-  . concatMap f . HM.toList . getSlime
+printSlime :: HSlime s => s -> Text
+printSlime = unlines . (:) "[SLIME]"
+  . fmap showSlime . HM.toList . getSlime
   where
-    f (n,s) =
-      [ "AT:"
-      , nodeName n
-      , "AMNT:"
-      , T.pack . show $ s ]
+    showSlime (n, Slime (MNat s)) =
+      nodeName n `append` " -> " `append` (pack . show $ s)
+    showSlime (n, Slime MErr) =
+      nodeName n `append` " -> Err"
 
-printUnits :: HUnits s => s -> IO ()
-printUnits = print . T.unlines . (:) "UNITS:"
-  . concatMap f . HM.toList . getUnits
+printUnits :: HUnits s => s -> Text
+printUnits = unlines . (:) "[UNITS]"
+  . fmap showUnit . HM.toList . HM.mapMaybe id . getUnits
   where
-    f (n,u) =
-      [ "AT:"
-      , nodeName n
-      , "UNIT:"
-      , T.pack . show $ u ]
+    showUnit (n,s) = nodeName n `append` " -> " `append` (pack . show $ s)
 
-printOrders :: HOrders s => s -> IO ()
-printOrders = print . T.unlines . (:) "ORDERS:"
-  . concatMap f . HM.toList . getOrders
+printOrders :: HOrders s => s -> Text
+printOrders = unlines . (:) "[ORDERS]"
+  . fmap showOrder . HM.toList . HM.mapMaybe id . getOrders
   where
-    f (n,o) =
-      [ "FROM:"
-      , nodeName n
-      , "TO:"
-      , T.pack . show $ o ]
-
+    showOrder (n,s) = nodeName n `append` " -> " `append` nodeName s
 

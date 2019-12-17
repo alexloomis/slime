@@ -7,5 +7,5 @@ import Interface
 import qualified Data.Text.IO as T
 
 main :: IO Board
-main = loop smallBoard
+main = putStrLn "Ready." >> loop smallBoard
 

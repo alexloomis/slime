@@ -7,13 +7,13 @@ module Board
   , emptyBoard
   , boardAttrs
   , renameNodes
+  , printBoard
   ) where
 
-import Board.Printer
+import Board.Graph
 import Engine
 import Engine.Internal.Type
 import Engine.PackAttr
-import Interface
 
 import           Control.Lens.Combinators
 import           Control.Monad            (liftM5)
@@ -31,11 +31,6 @@ data Board = Board
   } deriving (Eq, Show)
 
 $(makeFieldsNoPrefix ''Board)
-
-instance GameState Board where
-  showState = printBoard
-    . renameNodes (\(Node t) -> Node $ "N: " `T.append` (T.pack . show $ t))
-  endTurn = resolveDeaths . resolveSlime . resolveUnits . resolveOrders
 
 makeBoard :: HashSet Node -> NodeAttr Ends -> NodeAttr Slime
   -> NodeAttr (Maybe Unit) -> NodeAttr (Maybe Node) -> Board

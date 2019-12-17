@@ -20,8 +20,8 @@ import qualified Text.Megaparsec.Char.Lexer as L
 type Parser = ParsecT Void Text Identity
 
 data Command =
-    Save (Maybe FilePath) -- Save the game
-  | Load (Maybe FilePath) -- Load a game
+    Save FilePath -- Save the game
+  | Load FilePath -- Load a game
   | Quit -- Quit the game
   | Move Node Node -- Give a command
   | Clear Node -- Clear orders from Node
@@ -51,9 +51,9 @@ doubleQuotes = between (char '"') (symbol "\"")
 node :: Parser Node
 node = Node <$> (singleQuoted <|> doubleQuoted <|> unquoted)
   where
-    singleQuoted = singleQuotes (takeWhile1P (Just "Node") (/= '\''))
-    doubleQuoted = doubleQuotes (takeWhile1P (Just "Node") (/= '"'))
-    unquoted = takeWhile1P (Just "Node") isAlphaNum
+    singleQuoted = singleQuotes (takeWhile1P (Just "node") (/= '\''))
+    doubleQuoted = doubleQuotes (takeWhile1P (Just "node") (/= '"'))
+    unquoted = takeWhile1P (Just "node") isAlphaNum
 
 nodePair :: (Node -> Node -> b) -> Parser b
 nodePair c = do
@@ -62,18 +62,18 @@ nodePair c = do
   eof
   return . c n1 $ n2
 
-optFile :: Parser (Maybe FilePath)
-optFile = optional $ unpack <$> (singleQuoted <|> doubleQuoted <|> unquoted)
+file :: Parser FilePath
+file = unpack <$> (singleQuoted <|> doubleQuoted <|> unquoted)
   where
-    singleQuoted = singleQuotes (takeWhile1P (Just "File Path") (/= '\''))
-    doubleQuoted = doubleQuotes (takeWhile1P (Just "File Path") (/= '"'))
-    unquoted = takeWhile1P (Just "File Path") (not . isSpace)
+    singleQuoted = singleQuotes (takeWhile1P (Just "filepath") (/= '\''))
+    doubleQuoted = doubleQuotes (takeWhile1P (Just "filepath") (/= '"'))
+    unquoted = takeWhile1P (Just "filepath") (not . isSpace)
 
-fileOp :: (Maybe FilePath -> b) -> Parser b
+fileOp :: (FilePath -> b) -> Parser b
 fileOp op = do
-  file <- lexeme optFile
+  f <- lexeme file
   eof
-  return . op $ file
+  return . op $ f
 
 command :: Parser Command
 command = do
@@ -81,6 +81,7 @@ command = do
   choice
     [ symbol "quit" >> eof >> return Quit
     , symbol "show" >> eof >> return Show
+    , symbol "peek" >> eof >> return Peek
     , symbol "done" >> eof >> return Done
     , symbol "clear" >> do
       n <- lexeme node

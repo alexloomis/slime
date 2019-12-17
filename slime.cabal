@@ -7,7 +7,7 @@ cabal-version: 1.12
 -- hash: ab79f45fec1cbf5e2f7776efd480257fc5205223c163d328c5d3ed79c00063d6
 
 name:           slime
-version:        0.1.0.0
+version:        0.1.0
 description:    Please see the README on GitHub at <https://github.com/alexloomis/slime#readme>
 homepage:       https://github.com/alexloomis/slime#readme
 bug-reports:    https://github.com/alexloomis/slime/issues
@@ -28,7 +28,7 @@ source-repository head
 library
   exposed-modules:
       Board
-    , Board.Printer
+    , Board.Graph
     , Engine
     , Engine.PackAttr
     , Engine.Print
@@ -38,6 +38,7 @@ library
     , Engine.Util.MaybeNat
     , Interface
     , Parser.Ingame
+    , Parser.Save
   other-modules:
       Board.Partial
     , Engine.Internal.Util

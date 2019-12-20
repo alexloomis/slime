@@ -53,8 +53,14 @@ showS s = T.putStrLn (showGame s) >> return s
 peek :: GameState s => s -> IO s
 peek s = T.putStrLn (showGame (endTurn s)) >> return s
 
-done :: GameState s => s -> IO s
-done s = T.putStrLn "Ending turn." >> return (endTurn s)
+turn :: GameState s => s -> IO s
+turn s = T.putStrLn "Ending turn." >> return (endTurn s)
+
+status :: GameState s => s -> IO s
+status s = (print . victory $ s) >> return s
+
+graph :: GameState s => s -> IO s
+graph s = T.putStrLn (graphGame s) >> return s
 
 loop :: GameState s => s -> IO s
 loop s = do
@@ -70,6 +76,8 @@ loop s = do
       Load fp    -> load fp s >>= loop
       Show       -> showS s >>= loop
       Peek       -> peek s >>= loop
-      Done       -> done s >>= loop
+      Turn       -> turn s >>= loop
+      Status     -> status s >>= loop
+      Graph      -> graph s >>= loop
       Quit       -> quit s
 

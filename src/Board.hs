@@ -68,4 +68,8 @@ renameNodes f = liftM5 makeBoard
 instance GameState Board where
   parseGame = uncurry5 makeBoard <$> parseSave
     where uncurry5 f (a,b,c,d,e) = f a b c d e
+  victory s
+    | all (== 0) (HM.elems . getSlime $ s) = Win
+    | all (== Nothing) (HM.elems . getUnits $ s) = Lose
+    | otherwise = Ongoing
 

@@ -25,7 +25,9 @@ data Command =
   | Clear Node -- Clear orders from Node
   | Show -- Show the board
   | Peek -- Show current resolution
-  | Done -- End turn
+  | Turn -- End turn
+  | Status -- Show victory status
+  | Graph -- Show graphViz graph
   deriving Show
 
 -- |Eats nonzero amount of whitespace.
@@ -80,7 +82,9 @@ command = do
     [ symbol "quit" >> eof >> return Quit
     , symbol "show" >> eof >> return Show
     , symbol "peek" >> eof >> return Peek
-    , symbol "done" >> eof >> return Done
+    , symbol "turn" >> eof >> return Turn
+    , symbol "status" >> eof >> return Status
+    , symbol "graph" >> eof >> return Graph
     , symbol "clear" >> do
       n <- lexeme node
       eof

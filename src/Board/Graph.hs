@@ -9,6 +9,8 @@ import           Control.Monad     (liftM3)
 import           Data.GraphViz
 import qualified Data.HashMap.Lazy as HM
 import qualified Data.HashSet      as HS
+import           Data.Text         (Text)
+import           Data.Text.Lazy    (toStrict)
 import qualified Data.Text.Lazy.IO as LT
 
 instance Labellable Slime where
@@ -59,6 +61,6 @@ boardToDot :: (HNodes s, HEnds s, HSlime s, HUnits s, HOrders s)
 boardToDot = liftM3 graphElemsToDot graphParams nodeLs endLs
 
 printBoard :: (HNodes s, HEnds s, HSlime s, HUnits s, HOrders s)
-  => s -> IO ()
-printBoard = LT.putStrLn . printDotGraph . boardToDot
+  => s -> Text
+printBoard = toStrict . printDotGraph . boardToDot
 

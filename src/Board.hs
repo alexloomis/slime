@@ -1,75 +1,73 @@
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
+{-# LANGUAGE DeriveGeneric          #-}
+{-# LANGUAGE FlexibleInstances      #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE NamedFieldPuns         #-}
+{-# LANGUAGE TemplateHaskell        #-}
 
-module Board
-  ( Board
-  , makeBoard
-  , emptyBoard
-  , boardAttrs
-  , renameNodes
-  , printBoard
-  ) where
+module Board where
 
-import Board.Graph
 import Engine
-import Engine.Internal.Type
-import Engine.PackAttr      ()
 import GameState
-import Parser.Save
+import Internal.Print
+import Parse.Save
 
 import           Control.Lens.Combinators
-import           Control.Monad            (liftM5)
-import qualified Data.HashMap.Lazy        as HM
-import           Data.HashSet             (HashSet)
-import qualified Data.HashSet             as HS
+import           Data.Maybe               (fromJust, isNothing)
+import           Data.Text                (Text)
+import qualified Data.Text                as T
+import           Data.Type.Nat            (SNatI)
+import           Data.Vec.Lazy            (Vec, fromListPrefix, toList)
+import           GHC.Generics             (Generic)
 
-data Board = Board
-  { _nodes  :: HashSet Node
-  , _ends   :: NodeAttr Ends
-  , _slime  :: NodeAttr Slime
-  , _units  :: NodeAttr (Maybe Unit)
-  , _orders :: NodeAttr (Maybe Node)
-  } deriving (Eq, Show)
+newtype NodeName = NodeName {_nodeName :: Text} deriving (Eq, Generic)
+
+data Board n = Board
+  { _ends   :: Vec n (Ends n)
+  , _slime  :: Vec n Slime
+  , _units  :: Vec n (Maybe Unit)
+  , _orders :: Vec n (Order n) }
+  deriving (Eq, Generic)
 
 $(makeFieldsNoPrefix ''Board)
 
-makeBoard :: HashSet Node -> NodeAttr Ends -> NodeAttr Slime
-  -> NodeAttr (Maybe Unit) -> NodeAttr (Maybe Node) -> Board
-makeBoard _nodes _ends _slime _units _orders =
-  packAttr _orders
-  . packAttr _units
-  . packAttr _slime
-  . packAttr _ends
-  $ set nodes _nodes emptyBoard
+makeBoard :: Vec n (Ends n) -> Vec n Slime -> Vec n (Maybe Unit)
+  -> [OneOrder n] -> Board n
+makeBoard _ends _slime _units = foldr giveOrder
+  (Board
+    { _ends
+    , _slime
+    , _units
+    , _orders = fmap (const $ Order Nothing) _ends })
 
-emptyBoard :: Board
+allN :: SNatI n => a -> Vec n a
+allN = fromJust . fromListPrefix . repeat
+
+emptyBoard :: SNatI n => Board n
 emptyBoard = Board
-  { _nodes = HS.empty
-  , _ends = HM.empty
-  , _slime = HM.empty
-  , _units = HM.empty
-  , _orders = HM.empty }
+  (allN . allN $ 0)
+  (allN 0)
+  (allN Nothing)
+  (allN $ Order Nothing)
 
-boardAttrs :: Board -> (HashSet Node, NodeAttr Ends, NodeAttr Slime
-  , NodeAttr (Maybe Unit), NodeAttr (Maybe Node))
-boardAttrs b = (_nodes b, _ends b, _slime b, _units b, _orders b)
+updateField :: Parsed n -> Board n -> Board n
+updateField = \case
+  ParsedEnds p -> set ends p
+  ParsedSlime p -> set slime p
+  ParsedUnits p -> set units p
+  ParsedOrders p -> set orders p
 
-renameKeys :: (Node -> Node) -> NodeAttr a -> NodeAttr a
-renameKeys f = HM.fromList . fmap (\(k,v) -> (f k, v)) . HM.toList
+parseBoard :: SNatI n => Parser (Board n)
+parseBoard = foldr updateField emptyBoard <$> parseSave
 
-renameNodes :: (Node -> Node) -> Board -> Board
-renameNodes f = liftM5 makeBoard
-  (HS.map f . getNodes)
-  (HM.map (renameKeys f) . renameKeys f . getEnds)
-  (renameKeys f . getSlime)
-  (renameKeys f . getUnits)
-  (HM.map (fmap f) . renameKeys f . getOrders)
-
-instance GameState Board where
-  parseGame = uncurry5 makeBoard <$> parseSave
-    where uncurry5 f (a,b,c,d,e) = f a b c d e
+instance SNatI n => GameState (Board n) n where
   victory s
-    | all (== 0) (HM.elems . getSlime $ s) = Win
-    | all (== Nothing) (HM.elems . getUnits $ s) = Lose
+    | all (== 0) (toList . getSlime $ s) = Win
+    | all isNothing (toList . getUnits $ s) = Lose
     | otherwise = Ongoing
+  showGame s = T.unlines
+    [printEnds s, printSlime s, printUnits s, printOrders s]
+  parseGame = parseBoard
+
+instance SNatI n => Show (Board n) where
+  show = show . showGame
 

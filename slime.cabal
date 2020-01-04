@@ -4,16 +4,16 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: ab79f45fec1cbf5e2f7776efd480257fc5205223c163d328c5d3ed79c00063d6
+-- hash: b54021bdfb5119269e4c0e975a7a48ef55e0ee70efcdc5a9796474465b73c121
 
 name:           slime
-version:        0.1.0
-description:    Please see the README on GitHub at <https://github.com/alexloomis/slime#readme>
-homepage:       https://github.com/alexloomis/slime#readme
-bug-reports:    https://github.com/alexloomis/slime/issues
-author:         Alex Loomis
-maintainer:     atloomis@math.arizona.edu
-copyright:      2019 Alex Loomis
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/githubuser/slime#readme>
+homepage:       https://github.com/githubuser/slime#readme
+bug-reports:    https://github.com/githubuser/slime/issues
+author:         Author name here
+maintainer:     example@example.com
+copyright:      2019 Author name here
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -23,49 +23,44 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/alexloomis/slime
+  location: https://github.com/githubuser/slime
 
 library
   exposed-modules:
       Board
-    , Board.Graph
-    , Engine
-    , Engine.PackAttr
-    , Engine.Print
-    , Engine.Slime
-    , Engine.Test
-    , Engine.Unit
-    , Engine.Util.MaybeNat
-    , GameState
-    , Interface
-    , Parser.Ingame
-    , Parser.Save
+      Engine
+      GameState
+      Graph
+      Interface
+      Internal.Import
+      Internal.Move
+      Internal.Order
+      Internal.Print
+      Internal.Slime
+      Internal.Type
+      Internal.Unit
+      Internal.Unit.Lobber
+      Internal.Unit.Sprayer
+      Internal.Util
+      Parse.Interact
+      Parse.Save
   other-modules:
-      Board.Partial
-    , Engine.Internal.Util
-    , Engine.Internal.Type
-    , Engine.Slime.Resolve
-    , Engine.Unit.Order
-    , Engine.Unit.Lobber
-    , Engine.Unit.Move
-    , Engine.Unit.Sprayer
-    , Engine.Unit.Util
-    , Paths_slime
+      Paths_slime
   hs-source-dirs:
       src
+  default-extensions: DataKinds FlexibleContexts GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses OverloadedStrings RankNTypes
+  ghc-options: -Wall -Wcompat -Wredundant-constraints -Wincomplete-record-updates -Wincomplete-uni-patterns
   build-depends:
       base >=4.7 && <5
-    , data-default-class
+    , composition
     , extra
-    , filepath
+    , fin
     , graphviz
-    , hashable
     , lens
     , megaparsec
     , mtl
     , text
-    , unordered-containers
-  default-extensions: FlexibleContexts, FlexibleInstances, MultiParamTypeClasses
+    , vec
   default-language: Haskell2010
 
 executable slime-exe
@@ -74,32 +69,45 @@ executable slime-exe
       Paths_slime
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  default-extensions: DataKinds FlexibleContexts GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses OverloadedStrings RankNTypes
+  ghc-options: -Wall -Wcompat -Wredundant-constraints -Wincomplete-record-updates -Wincomplete-uni-patterns -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
+    , composition
+    , extra
+    , fin
+    , graphviz
+    , lens
+    , megaparsec
+    , mtl
     , slime
     , text
+    , vec
   default-language: Haskell2010
 
 test-suite slime-test
   type: exitcode-stdio-1.0
-  main-is: Test.hs
+  main-is: Spec.hs
   other-modules:
-      Test.Gen
-    , Paths_slime
+      Test.Instances
+      Paths_slime
   hs-source-dirs:
       test
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
-    -Wall -Wcompat -Wincomplete-uni-patterns -Wincomplete-record-updates
-    -Wredundant-constraints
+  default-extensions: DataKinds FlexibleContexts GADTs GeneralizedNewtypeDeriving LambdaCase MultiParamTypeClasses OverloadedStrings RankNTypes
+  ghc-options: -Wall -Wcompat -Wredundant-constraints -Wincomplete-record-updates -Wincomplete-uni-patterns -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
-    , slime
+    , composition
+    , extra
+    , fin
     , graphviz
-    , HTF
     , lens
-    , QuickCheck
-    , quickcheck-instances
+    , megaparsec
+    , mtl
+    , slime
+    , smallcheck
+    , tasty
+    , tasty-smallcheck
     , text
-    , unordered-containers
+    , vec
   default-language: Haskell2010

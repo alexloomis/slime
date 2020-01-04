@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Parser.Ingame
+module Parse.Interact
   ( Command (..)
   , command
   ) where
@@ -8,8 +8,9 @@ module Parser.Ingame
 import Engine
 
 import           Control.Monad.Identity     (Identity)
-import           Data.Char                  (isAlphaNum, isSpace)
+import           Data.Char                  (isDigit, isSpace)
 import           Data.Text                  (Text, unpack)
+import           Data.Type.Nat              (SNatI)
 import           Data.Void                  (Void)
 import           Text.Megaparsec
 import           Text.Megaparsec.Char
@@ -17,12 +18,12 @@ import qualified Text.Megaparsec.Char.Lexer as L
 
 type Parser = ParsecT Void Text Identity
 
-data Command =
+data Command n =
     Save FilePath -- Save the game
   | Load FilePath -- Load a game
   | Quit -- Quit the game
-  | Move Node Node -- Give a command
-  | Clear Node -- Clear orders from Node
+  | Move (NodeID n) (NodeID n) -- Give a command
+  | Clear (NodeID n) -- Clear orders from Node
   | Show -- Show the board
   | Peek -- Show current resolution
   | Turn -- End turn
@@ -48,17 +49,13 @@ singleQuotes = between (char '\'') (symbol "'")
 doubleQuotes :: Parser a -> Parser a
 doubleQuotes = between (char '"') (symbol "\"")
 
-node :: Parser Node
-node = Node <$> (singleQuoted <|> doubleQuoted <|> unquoted)
-  where
-    singleQuoted = singleQuotes (takeWhile1P (Just "node") (/= '\''))
-    doubleQuoted = doubleQuotes (takeWhile1P (Just "node") (/= '"'))
-    unquoted = takeWhile1P (Just "node") isAlphaNum
+node :: SNatI n => Parser (NodeID n)
+node = lexeme $ fromInteger . read . unpack <$> takeWhile1P (Just "NodeID") isDigit
 
-nodePair :: (Node -> Node -> b) -> Parser b
+nodePair :: SNatI n => (NodeID n -> NodeID n -> b) -> Parser b
 nodePair c = do
-  n1 <- lexeme node
-  n2 <- lexeme node
+  n1 <- node
+  n2 <- node
   eof
   return . c n1 $ n2
 
@@ -75,7 +72,7 @@ fileOp op = do
   eof
   return . op $ f
 
-command :: Parser Command
+command :: SNatI n => Parser (Command n)
 command = do
   hidden space
   choice
@@ -86,7 +83,7 @@ command = do
     , symbol "status" >> eof >> return Status
     , symbol "graph" >> eof >> return Graph
     , symbol "clear" >> do
-      n <- lexeme node
+      n <- node
       eof
       return $ Clear n
     , symbol "move" >> nodePair Move

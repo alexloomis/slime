@@ -1,46 +1,65 @@
 module Engine
-  -- *From Engine.Internal.Type
-  ( Node (..)
-  , NodeAttr
+  ( -- *From Internal.Type
+    NodeID
   , Ends
   , Slime (..)
   , Unit (..)
   , Order (..)
-  , HNodes
+  , HasEnds (..)
   , HEnds
+  , HasSlime (..)
   , HSlime
+  , HasUnits (..)
   , HUnits
+  , HasOrders (..)
   , HOrders
-  , getNodes
   , getEnds
   , getSlime
   , getUnits
   , getOrders
-  -- *From Engine.Internal.Util
-  , getOrDefault
-  -- *From Engine.PackAttr
-  , PackAttr (..)
-  -- , prePackAttr
-  -- *From Engine.Slime
-  , slimePerEnd
-  , newSlime
+  -- *From Internal.Slime
   , resolveSlime
-  -- *From Engine.Unit
-  , resolveOrders
+  , slimePerEnd
+  -- *From internal.Unit
+  , lobberRange
+  , sprayerRange
+  , sprayerDamage
   , resolveUnits
   , resolveDeaths
-  , newPositions
-  , lobberTargets
-  , sprayerDamage
-  , giveOrder
+  -- *From Internal.Order
+  , ErrCode
+  , OneOrder (..)
+  , toOneOrders
   , checkOrder
+  , hasOrder
+  , giveOrder
   , clearOrderFrom
   , clearAllOrders
+  -- *From Internal.Move
+  , resolveOrders
+  -- *From Internal.Util
+  , toMap
   ) where
 
-import Engine.Internal.Type
-import Engine.Internal.Util
-import Engine.PackAttr
-import Engine.Slime
-import Engine.Unit
+import Internal.Move
+import Internal.Order
+import Internal.Slime
+import Internal.Type
+import Internal.Unit
+import Internal.Util
+
+import Control.Lens  (view)
+import Data.Vec.Lazy (Vec)
+
+getEnds :: HEnds s n => s -> Vec n (Ends n)
+getEnds = view ends
+
+getSlime :: HSlime s n => s -> Vec n Slime
+getSlime = view slime
+
+getUnits :: HUnits s n => s -> Vec n (Maybe Unit)
+getUnits = view units
+
+getOrders :: HOrders s n => s -> Vec n (Order n)
+getOrders = view orders
 

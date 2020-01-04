@@ -1,3 +1,3 @@
-# Changelog for slime
+# Changelog for natslime
 
 ## Unreleased changes

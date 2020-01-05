@@ -19,7 +19,7 @@ type Ends n = Vec n Nat
 newtype Slime = Slime Nat
   deriving (Enum, Eq, Generic, Integral, Num, Ord, Real, Show)
 
-data Unit = Sprayer | Lobber deriving (Eq, Generic, Show)
+data Unit = Lobber | Sprayer deriving (Eq, Generic, Ord, Show)
 
 newtype Order n = Order {_order :: Maybe (NodeID n)} deriving (Eq, Generic, Show)
 

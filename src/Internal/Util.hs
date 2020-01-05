@@ -1,3 +1,5 @@
+{-# LANGUAGE TupleSections #-}
+
 module Internal.Util where
 
 import Internal.Type
@@ -53,9 +55,14 @@ count xs = [ (a, genericLength . filter (== a) $ xs) | a <- xs ]
 toMap :: Vec n a -> [(Fin n, a)]
 toMap = toList . imap (,)
 
--- Unsafe!
-fromMap :: SNatI n => [(Fin n, a)] -> Vec n a
-fromMap xs = if (fmap fst . sortOn fst $ xs) == universe
+unsafeFromMap :: SNatI n => [(Fin n, a)] -> Vec n a
+unsafeFromMap xs = if (fmap fst . sortOn fst $ xs) == universe
   then fromJust . fromList . fmap snd . sortOn fst $ xs
   else error "fromMap: invalid keys"
+
+-- From map with a default.
+fromMap :: SNatI n => a -> [(Fin n, a)] -> Vec n a
+fromMap a = unsafeFromMap . foldr addIfNew [] . (++) (fmap (,a) universe)
+  where
+    addIfNew (n,b) xs = if n `elem` fmap fst xs then xs else (n,b):xs
 

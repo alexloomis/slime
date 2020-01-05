@@ -25,7 +25,9 @@ printSlime :: HSlime s n => s -> Text
 printSlime = unlines . filter (/= "")
   .  (:) "[SLIME]" . fmap showSlime . toMap . view slime
   where
-    showSlime (n, Slime s) = showT n `append` " -> " `append` showT s
+    showSlime (n, Slime s) = if s == 0
+      then ""
+      else showT n `append` " -> " `append` showT s
 
 printUnits :: HUnits s n => s -> Text
 printUnits = unlines . filter (/= "")

@@ -28,7 +28,7 @@ movingTo :: HOrders s n => s -> NodeID n -> Maybe (NodeID n)
 movingTo s n = lookup (Order $ Just n) . fmap swap . toMap $ s ^. orders
 
 newPositions :: (HUnits s n, HOrders s n) => s -> Vec n (Maybe Unit)
-newPositions s = imap f . view orders . addHolds $ s
+newPositions s = imap f . view orders $ s
   where
     f k _ = case movingTo s k of
       Nothing -> Nothing
@@ -38,7 +38,8 @@ newPositions s = imap f . view orders . addHolds $ s
 -- If any overlaps are detected, maintains the original state.
 -- Clears all orders regardless.
 resolveOrders :: (HUnits s n, HOrders s n) => s -> s
-resolveOrders s = if hasOverlap . addHolds $ s
+resolveOrders s = if hasOverlap s'
   then clearAllOrders s
-  else clearAllOrders $ set units (newPositions s) s
+  else clearAllOrders $ set units (newPositions s') s
+  where s' = addHolds s
 

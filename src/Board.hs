@@ -69,5 +69,5 @@ instance SNatI n => GameState (Board n) n where
   parseGame = parseBoard
 
 instance SNatI n => Show (Board n) where
-  show = show . showGame
+  show = T.unpack . showGame
 

@@ -8,19 +8,13 @@ module Parse.Save
 
 import Engine        hiding (slime)
 import Internal.Util (fromMap)
+import Parse.Util
 
-import           Control.Monad              (void)
-import           Control.Monad.Identity     (Identity)
-import           Data.Char                  (isDigit)
-import           Data.Text                  (Text, unpack)
-import           Data.Type.Nat              (Nat (..), SNatI)
-import           Data.Vec.Lazy              (Vec (..))
-import           Data.Void                  (Void)
-import           Text.Megaparsec
-import           Text.Megaparsec.Char
-import qualified Text.Megaparsec.Char.Lexer as L
-
-type Parser = ParsecT Void Text Identity
+import Control.Monad        (void)
+import Data.Type.Nat        (Nat (..), SNatI)
+import Data.Vec.Lazy        (Vec (..))
+import Text.Megaparsec
+import Text.Megaparsec.Char
 
 data Parsed n =
     ParsedEnds (Vec n (Ends n))
@@ -30,31 +24,12 @@ data Parsed n =
 
 data Heading = ENDS | SLIME | UNITS | ORDERS
 
-readT :: Read a => Text -> a
-readT = read . unpack
-
--- |Eats nonzero amount of whitespace.
-spaceConsumer :: Parser ()
-spaceConsumer = L.space space1 empty empty
-
-symbol :: Text -> Parser Text
-symbol = L.symbol spaceConsumer
-
-lexeme :: Parser a -> Parser a
-lexeme = L.lexeme spaceConsumer
-
 heading :: Parser Heading
 heading = lexeme $ choice
   [ symbol "[ENDS]" >> return ENDS
   , symbol "[SLIME]" >> return SLIME
   , symbol "[UNITS]" >> return UNITS
   , symbol "[ORDERS]" >> return ORDERS ]
-
-anInteger :: Parser Integer
-anInteger = lexeme $ readT <$> takeWhile1P (Just "An Integer") isDigit
-
-integerLike :: Num a => String -> Parser a
-integerLike x = fromInteger <$> anInteger <?> x
 
 node :: SNatI n => Parser (NodeID n)
 node = integerLike "NodeID"
@@ -75,7 +50,7 @@ order = Order . Just <$> integerLike "Order"
 
 edgeWeight :: SNatI n => Parser (NodeID n, Nat)
 edgeWeight = do
-  -- notFollowedBy (node >> symbol "->")
+  notFollowedBy (anInteger >> symbol "->")
   m <- node
   _ <- symbol "#"
   n <- weight
@@ -85,7 +60,7 @@ edgeWeights :: SNatI n => Parser (Ends n)
 edgeWeights = do
   ls <- many edgeWeight
   lookAhead (eof <|> void heading <|> void edgeFrom)
-  return . fromMap $ ls
+  return . fromMap 0 $ ls
   where edgeFrom = anInteger >> symbol "->"
 
 arrowLine :: SNatI n => Parser a -> Parser (NodeID n, a)
@@ -95,30 +70,18 @@ arrowLine p = do
   y <- p
   return (x,y)
 
-parseEndLine :: SNatI n => Parser (NodeID n, Ends n)
-parseEndLine = arrowLine edgeWeights
-
-parseSlimeLine :: SNatI n => Parser (NodeID n, Slime)
-parseSlimeLine = arrowLine slime
-
-parseUnitLine :: SNatI n => Parser (NodeID n, Maybe Unit)
-parseUnitLine = fmap Just <$> arrowLine unit
-
-parseOrderLine :: SNatI n => Parser (NodeID n, Order n)
-parseOrderLine = arrowLine order
-
-parseVec :: SNatI n => Parser (NodeID n, v) -> Parser (Vec n v)
-parseVec p = do
+parseVec :: SNatI n => v -> Parser (NodeID n, v) -> Parser (Vec n v)
+parseVec d p = do
   ls <- many (lexeme p)
   lookAhead (eof <|> void heading)
-  return . fromMap $ ls
+  return . fromMap d $ ls
 
 chooseParser :: SNatI n => Heading -> Parser (Parsed n)
 chooseParser = \case
-  ENDS -> ParsedEnds <$> parseVec parseEndLine
-  SLIME -> ParsedSlime <$> parseVec parseSlimeLine
-  UNITS -> ParsedUnits <$> parseVec parseUnitLine
-  ORDERS -> ParsedOrders <$> parseVec parseOrderLine
+  ENDS -> ParsedEnds <$> parseVec (fromMap 0 []) (arrowLine edgeWeights)
+  SLIME -> ParsedSlime <$> parseVec 0 (arrowLine slime)
+  UNITS -> ParsedUnits <$> parseVec Nothing (fmap Just <$> arrowLine unit)
+  ORDERS -> ParsedOrders <$> parseVec (Order Nothing) (arrowLine order)
 
 parseSave :: SNatI n => Parser [Parsed n]
 parseSave = do

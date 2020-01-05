@@ -6,17 +6,13 @@ module Parse.Interact
   ) where
 
 import Engine
+import Parse.Util
 
-import           Control.Monad.Identity     (Identity)
-import           Data.Char                  (isDigit, isSpace)
-import           Data.Text                  (Text, unpack)
-import           Data.Type.Nat              (SNatI)
-import           Data.Void                  (Void)
-import           Text.Megaparsec
-import           Text.Megaparsec.Char
-import qualified Text.Megaparsec.Char.Lexer as L
-
-type Parser = ParsecT Void Text Identity
+import Data.Char            (isSpace)
+import Data.Text            (unpack)
+import Data.Type.Nat        (SNatI)
+import Text.Megaparsec
+import Text.Megaparsec.Char
 
 data Command n =
     Save FilePath -- Save the game
@@ -31,26 +27,8 @@ data Command n =
   | Graph -- Show graphViz graph
   deriving Show
 
--- |Eats nonzero amount of whitespace.
-spaceConsumer :: Parser ()
-spaceConsumer = L.space space1 empty empty
-
-symbol :: Text -> Parser Text
-symbol = L.symbol spaceConsumer
-
-lexeme :: Parser a -> Parser a
-lexeme = L.lexeme spaceConsumer
-
--- |Returns quoted value.
-singleQuotes :: Parser a -> Parser a
-singleQuotes = between (char '\'') (symbol "'")
-
--- |Returns quoted value.
-doubleQuotes :: Parser a -> Parser a
-doubleQuotes = between (char '"') (symbol "\"")
-
 node :: SNatI n => Parser (NodeID n)
-node = lexeme $ fromInteger . read . unpack <$> takeWhile1P (Just "NodeID") isDigit
+node = integerLike "NodeID"
 
 nodePair :: SNatI n => (NodeID n -> NodeID n -> b) -> Parser b
 nodePair c = do

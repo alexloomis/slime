@@ -33,15 +33,15 @@ instance (Monad m, SNatI n) => Serial m (OneOrder n) where
 instance (Monad m , SNatI n) => Serial m (Board n) where
   series = cons4 makeBoard
 
-newtype ShallowBoard m (n :: Nat) = ShallowBoard {_shallow :: Board m}
+newtype Shallow m (n :: Nat) = Shallow {_shallow :: Board m}
   deriving Show
 
 -- Maybe worth testing that don't hang: (3,3,2), (2,4,2), (4,2,2)
 -- length (listSeries 3 :: [SmallBoard Nat3 Nat2]) = 221184
 -- length (listSeries 2 :: [SmallBoard Nat4 Nat2]) =  65536
 -- length (listSeries 4 :: [SmallBoard Nat2 Nat2]) =  11664
-instance (Monad f, SNatI m, SNatI n) => Serial f (ShallowBoard m n) where
+instance (Monad f, SNatI m, SNatI n) => Serial f (Shallow m n) where
   series = do
     edges <- localDepth (min (reflectToNum (Proxy :: Proxy n))) series
-    ShallowBoard <$> cons3 (makeBoard edges)
+    Shallow <$> cons3 (makeBoard edges)
 

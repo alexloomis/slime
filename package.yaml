@@ -28,6 +28,7 @@ dependencies:
   - lens
   - megaparsec
   - mtl
+  - singletons
   - text
   - vec
 

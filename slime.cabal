@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b54021bdfb5119269e4c0e975a7a48ef55e0ee70efcdc5a9796474465b73c121
+-- hash: ed6cddab0055cdfdf3989075ad0b3df8aa7344544af28d3d53e62aafe116be5c
 
 name:           slime
 version:        0.1.0.0
@@ -44,6 +44,7 @@ library
       Internal.Util
       Parse.Interact
       Parse.Save
+      Parse.Util
   other-modules:
       Paths_slime
   hs-source-dirs:
@@ -59,6 +60,7 @@ library
     , lens
     , megaparsec
     , mtl
+    , singletons
     , text
     , vec
   default-language: Haskell2010
@@ -80,6 +82,7 @@ executable slime-exe
     , lens
     , megaparsec
     , mtl
+    , singletons
     , slime
     , text
     , vec
@@ -104,6 +107,7 @@ test-suite slime-test
     , lens
     , megaparsec
     , mtl
+    , singletons
     , slime
     , smallcheck
     , tasty

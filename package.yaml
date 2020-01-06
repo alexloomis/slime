@@ -23,14 +23,14 @@ dependencies:
   - base >= 4.7 && < 5
   - composition
   - extra
-  - fin
+  - finite-typelits
   - graphviz
   - lens
   - megaparsec
   - mtl
   - singletons
   - text
-  - vec
+  - vector-sized
 
 ghc-options:
   - -Wall

@@ -48,18 +48,18 @@ import Internal.Type
 import Internal.Unit
 import Internal.Util
 
-import Control.Lens  (view)
-import Data.Vec.Lazy (Vec)
+import Control.Lens      (view)
+import Data.Vector.Sized (Vector)
 
-getEnds :: HEnds s n => s -> Vec n (Ends n)
+getEnds :: HEnds s n => s -> Vector n (Ends n)
 getEnds = view ends
 
-getSlime :: HSlime s n => s -> Vec n Slime
+getSlime :: HSlime s n => s -> Vector n Slime
 getSlime = view slime
 
-getUnits :: HUnits s n => s -> Vec n (Maybe Unit)
+getUnits :: HUnits s n => s -> Vector n (Maybe Unit)
 getUnits = view units
 
-getOrders :: HOrders s n => s -> Vec n (Order n)
+getOrders :: HOrders s n => s -> Vector n (Order n)
 getOrders = view orders
 

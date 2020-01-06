@@ -1,17 +1,19 @@
 module Internal.Import
   ( module Internal.Type
   , module Internal.Util
-  , module Data.Fin
-  , module Data.Type.Nat
-  , module Data.Vec.Lazy
+  , module Numeric.Natural
+  , module Data.Finite
+  , module GHC.TypeNats
+  , module Data.Vector.Sized
   , module Control.Lens
   ) where
 
 import Internal.Type
 import Internal.Util
 
-import Control.Lens  (makeFields, over, set, view, (^.))
-import Data.Fin      (Fin (..))
-import Data.Type.Nat (Nat (..), SNatI)
-import Data.Vec.Lazy (Vec, imap, toList, (!))
+import Control.Lens      (makeFields, over, set, view, (^.))
+import Data.Finite       (Finite)
+import Data.Vector.Sized (Vector, imap, index, toList)
+import GHC.TypeNats      (KnownNat)
+import Numeric.Natural   (Natural)
 

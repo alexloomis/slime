@@ -6,31 +6,33 @@
 
 module Board where
 
+import Prelude hiding (replicate)
+
 import Engine
 import GameState
 import Internal.Print
 import Parse.Save
 
 import           Control.Lens.Combinators
-import           Data.Maybe               (fromJust, isNothing)
+import           Data.Maybe               (isNothing)
 import           Data.Text                (Text)
 import qualified Data.Text                as T
-import           Data.Type.Nat            (SNatI)
-import           Data.Vec.Lazy            (Vec, fromListPrefix, toList)
+import           Data.Vector.Sized        (Vector, replicate, toList)
 import           GHC.Generics             (Generic)
+import           GHC.TypeNats             (KnownNat)
 
 newtype NodeName = NodeName {_nodeName :: Text} deriving (Eq, Generic)
 
 data Board n = Board
-  { _ends   :: Vec n (Ends n)
-  , _slime  :: Vec n Slime
-  , _units  :: Vec n (Maybe Unit)
-  , _orders :: Vec n (Order n) }
+  { _ends   :: Vector n (Ends n)
+  , _slime  :: Vector n Slime
+  , _units  :: Vector n (Maybe Unit)
+  , _orders :: Vector n (Order n) }
   deriving (Eq, Generic)
 
 $(makeFieldsNoPrefix ''Board)
 
-makeBoard :: Vec n (Ends n) -> Vec n Slime -> Vec n (Maybe Unit)
+makeBoard :: Vector n (Ends n) -> Vector n Slime -> Vector n (Maybe Unit)
   -> [OneOrder n] -> Board n
 makeBoard _ends _slime _units = foldr giveOrder
   (Board
@@ -39,15 +41,12 @@ makeBoard _ends _slime _units = foldr giveOrder
     , _units
     , _orders = fmap (const $ Order Nothing) _ends })
 
-allN :: SNatI n => a -> Vec n a
-allN = fromJust . fromListPrefix . repeat
-
-emptyBoard :: SNatI n => Board n
+emptyBoard :: KnownNat n => Board n
 emptyBoard = Board
-  (allN . allN $ 0)
-  (allN 0)
-  (allN Nothing)
-  (allN $ Order Nothing)
+  (replicate . replicate $ 0)
+  (replicate 0)
+  (replicate Nothing)
+  (replicate $ Order Nothing)
 
 updateField :: Parsed n -> Board n -> Board n
 updateField = \case
@@ -56,10 +55,10 @@ updateField = \case
   ParsedUnits p -> set units p
   ParsedOrders p -> set orders p
 
-parseBoard :: SNatI n => Parser (Board n)
+parseBoard :: KnownNat n => Parser (Board n)
 parseBoard = foldr updateField emptyBoard <$> parseSave
 
-instance SNatI n => GameState (Board n) n where
+instance KnownNat n => GameState (Board n) n where
   victory s
     | all (== 0) (toList . getSlime $ s) = Win
     | all isNothing (toList . getUnits $ s) = Lose
@@ -68,6 +67,6 @@ instance SNatI n => GameState (Board n) n where
     [printEnds s, printSlime s, printUnits s, printOrders s]
   parseGame = parseBoard
 
-instance SNatI n => Show (Board n) where
+instance KnownNat n => Show (Board n) where
   show = T.unpack . showGame
 

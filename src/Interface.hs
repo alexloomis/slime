@@ -44,8 +44,8 @@ load fp s = do
       return s
     Right new -> T.putStrLn "File loaded." >> return new
 
-quit :: s -> IO s
-quit s = T.putStrLn "Bye!" >> return s
+quit :: IO ()
+quit = T.putStrLn "Bye!"
 
 showS :: GameState s n => s -> IO s
 showS s = T.putStrLn (showGame s) >> return s
@@ -62,7 +62,7 @@ status s = (print . victory $ s) >> return s
 graph :: GameState s n => s -> IO s
 graph s = T.putStrLn (graphGame s) >> return s
 
-loop :: GameState s n => s -> IO s
+loop :: GameState s n => s -> IO ()
 loop s = do
   input <- T.hGetLine stdin
   case runParser command "" input of
@@ -79,5 +79,5 @@ loop s = do
       Turn       -> turn s >>= loop
       Status     -> status s >>= loop
       Graph      -> graph s >>= loop
-      Quit       -> quit s
+      Quit       -> quit
 

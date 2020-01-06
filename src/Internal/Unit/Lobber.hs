@@ -2,7 +2,7 @@ module Internal.Unit.Lobber where
 
 import Internal.Import
 
-lobberRange :: Nat
+lobberRange :: Natural
 lobberRange = 1
 
 maxNeighbors :: (HEnds s n, HSlime s n) => s -> NodeID n -> [NodeID n]

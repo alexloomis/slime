@@ -27,7 +27,7 @@ hasOverlap = liftM2 (/=) destinations (nub . destinations)
 movingTo :: HOrders s n => s -> NodeID n -> Maybe (NodeID n)
 movingTo s n = lookup (Order $ Just n) . fmap swap . toMap $ s ^. orders
 
-newPositions :: (HUnits s n, HOrders s n) => s -> Vec n (Maybe Unit)
+newPositions :: (HUnits s n, HOrders s n) => s -> Vector n (Maybe Unit)
 newPositions s = imap f . view orders $ s
   where
     f k _ = case movingTo s k of

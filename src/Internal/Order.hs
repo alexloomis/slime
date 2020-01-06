@@ -33,7 +33,7 @@ checkAlreadyCmd  :: (HOrders s n, MonadReader s m, MonadError ErrCode m)
   => OneOrder n -> m (OneOrder n)
 checkAlreadyCmd cmd = do
   allCmds <- asks $ fmap _order . view orders
-  if isNothing $ allCmds ! src cmd
+  if isNothing $ allCmds `index` src cmd
     then return cmd
     else throwError (-2,
       "The unit at " `append` srcName cmd
@@ -48,7 +48,7 @@ checkEnd :: (HEnds s n, MonadReader s m, MonadError ErrCode m)
   => OneOrder n -> m (OneOrder n)
 checkEnd cmd = do
   es <- asks $ flip (viewAt ends) (src cmd)
-  if es ! dest cmd == 0
+  if es `index` dest cmd == 0
     then throwError (-4,
       "There is no edge from " `append` srcName cmd
       `append` " to " `append` destName cmd `append` ".")
@@ -87,7 +87,7 @@ clearOrderFrom n = over orders $ setElem n (Order Nothing)
 clearAllOrders :: HOrders s n => s -> s
 clearAllOrders = over orders $ fmap (const (Order Nothing))
 
-toOneOrders :: Vec n (Order n) -> [OneOrder n]
+toOneOrders :: Vector n (Order n) -> [OneOrder n]
 toOneOrders = mapMaybe extract . toMap
   where
     extract (_, Order Nothing)  = Nothing

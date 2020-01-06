@@ -10,7 +10,7 @@ import Parse.Util
 
 import Data.Char            (isSpace)
 import Data.Text            (unpack)
-import Data.Type.Nat        (SNatI)
+import GHC.TypeNats        (KnownNat)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
@@ -27,10 +27,10 @@ data Command n =
   | Graph -- Show graphViz graph
   deriving Show
 
-node :: SNatI n => Parser (NodeID n)
+node :: KnownNat n => Parser (NodeID n)
 node = integerLike "NodeID"
 
-nodePair :: SNatI n => (NodeID n -> NodeID n -> b) -> Parser b
+nodePair :: KnownNat n => (NodeID n -> NodeID n -> b) -> Parser b
 nodePair c = do
   n1 <- node
   n2 <- node
@@ -50,7 +50,7 @@ fileOp op = do
   eof
   return . op $ f
 
-command :: SNatI n => Parser (Command n)
+command :: KnownNat n => Parser (Command n)
 command = do
   hidden space
   choice

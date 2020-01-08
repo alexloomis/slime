@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections     #-}
 
-module Parse.Save
+module Parse.ReadFile
   ( Parser
   , Parsed (..)
   , parseSave
@@ -11,6 +12,8 @@ import Internal.Util (fromMap)
 import Parse.Util
 
 import Control.Monad        (void)
+import Data.Char            (isUpper)
+import Data.Text            (Text, pack)
 import Data.Vector.Sized    (Vector)
 import GHC.TypeNats         (KnownNat)
 import Numeric.Natural      (Natural)
@@ -22,15 +25,14 @@ data Parsed n =
   | ParsedSlime (Vector n Slime)
   | ParsedUnits (Vector n (Maybe Unit))
   | ParsedOrders (Vector n (Order n))
+  | UnParsed Text Text
 
-data Heading = ENDS | SLIME | UNITS | ORDERS
+heading :: Parser Text
+heading = lexeme . brackets $ takeWhile1P (Just "Heading") isUpper
 
-heading :: Parser Heading
-heading = lexeme $ choice
-  [ symbol "[ENDS]" >> return ENDS
-  , symbol "[SLIME]" >> return SLIME
-  , symbol "[UNITS]" >> return UNITS
-  , symbol "[ORDERS]" >> return ORDERS ]
+body :: Parser Text
+body = lexeme . label "Body"
+  $ pack <$> many (notFollowedBy heading >> anySingle)
 
 node :: KnownNat n => Parser (NodeID n)
 node = integerLike "NodeID"
@@ -77,12 +79,13 @@ parseVector d p = do
   lookAhead (eof <|> void heading)
   return . fromMap d $ ls
 
-chooseParser :: KnownNat n => Heading -> Parser (Parsed n)
+chooseParser :: KnownNat n => Text -> Parser (Parsed n)
 chooseParser = \case
-  ENDS -> ParsedEnds <$> parseVector (fromMap 0 []) (arrowLine edgeWeights)
-  SLIME -> ParsedSlime <$> parseVector 0 (arrowLine slime)
-  UNITS -> ParsedUnits <$> parseVector Nothing (fmap Just <$> arrowLine unit)
-  ORDERS -> ParsedOrders <$> parseVector (Order Nothing) (arrowLine order)
+  "ENDS" -> ParsedEnds <$> parseVector (fromMap 0 []) (arrowLine edgeWeights)
+  "SLIME" -> ParsedSlime <$> parseVector 0 (arrowLine slime)
+  "UNITS" -> ParsedUnits <$> parseVector Nothing (fmap Just <$> arrowLine unit)
+  "ORDERS" -> ParsedOrders <$> parseVector (Order Nothing) (arrowLine order)
+  h -> uncurry UnParsed . (h,) <$> body
 
 parseSave :: KnownNat n => Parser [Parsed n]
 parseSave = do

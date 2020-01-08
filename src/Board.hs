@@ -11,7 +11,7 @@ import Prelude hiding (replicate)
 import Engine
 import GameState
 import Internal.Print
-import Parse.Save
+import Parse.ReadFile
 
 import           Control.Lens.Combinators
 import           Data.Maybe               (isNothing)
@@ -54,6 +54,7 @@ updateField = \case
   ParsedSlime p -> set slime p
   ParsedUnits p -> set units p
   ParsedOrders p -> set orders p
+  _ -> id
 
 parseBoard :: KnownNat n => Parser (Board n)
 parseBoard = foldr updateField emptyBoard <$> parseSave

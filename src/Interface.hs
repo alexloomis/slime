@@ -20,7 +20,7 @@ move newOrder@(OneOrder n1 _) s = case checkOrder newOrder s of
     return $ giveOrder order s
   Left err -> case err of
     -- If the error is "already has order", try overwriting.
-    (-2, _) -> case checkOrder newOrder (clearOrderFrom n1 s) of
+    (AlreadyCmd, _) -> case checkOrder newOrder (clearOrderFrom n1 s) of
       Right order -> do
         T.putStrLn "Previous order overwritten."
         return $ giveOrder order (clearOrderFrom n1 s)

@@ -26,7 +26,9 @@ module Engine
   , sprayerDamage
   , resolveUnits
   , resolveDeaths
+  , cleanOrders
   -- *From Internal.Order
+  , ErrOrder (..)
   , ErrCode
   , OneOrder (..)
   , toOneOrders

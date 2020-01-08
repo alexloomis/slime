@@ -27,7 +27,7 @@ shallow421 :: (Proxy (Shallow 2 1) -> TestTree) -> TestTree
 shallow421 = localOption (4 :: SmallCheckDepth) . ($ (Proxy :: Proxy (Shallow 2 1)))
 
 shallow222 :: (Proxy (Shallow 2 2) -> TestTree) -> TestTree
-shallow222 = localOption (2 :: SmallCheckDepth) . ($ (Proxy :: Proxy (Shallow 2 2)))
+shallow222 = localOption (3 :: SmallCheckDepth) . ($ (Proxy :: Proxy (Shallow 2 2)))
 
 es23 :: (Proxy (BoardES 3) -> TestTree) -> TestTree
 es23 = localOption (2 :: SmallCheckDepth) . ($ (Proxy :: Proxy (BoardES 3)))
@@ -66,7 +66,7 @@ makeAfter _ text f = SC.testProperty text $ liftM2 (==)
 makeableAfter :: (KnownNat m, KnownNat n) => Proxy (Shallow m n) -> TestTree
 makeableAfter p = testGroup "Makeable after"
   [ makeAfter p "resolveSlime" resolveSlime
-  , makeAfter p "resolveDeaths" resolveDeaths
+  , makeAfter p "resolveDeaths" (cleanOrders . resolveDeaths)
   , makeAfter p "resolveUnits" resolveUnits
   , makeAfter p "resolveOrders" resolveOrders ]
 

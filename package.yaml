@@ -28,7 +28,7 @@ dependencies:
   - lens
   - megaparsec
   - mtl
-  - singletons
+  - optparse-applicative
   - text
   - vector-sized
 

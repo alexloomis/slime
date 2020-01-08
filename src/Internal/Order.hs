@@ -9,7 +9,13 @@ import Data.Maybe           (isJust, isNothing, mapMaybe)
 import Data.Text            (Text, append, pack)
 import GHC.Generics         (Generic)
 
-type ErrCode = (Int, Text)
+data ErrOrder =
+    NoUnit
+  | AlreadyCmd
+  | NoEdge
+  | DestConflict
+
+type ErrCode = (ErrOrder, Text)
 
 data OneOrder n = OneOrder {src :: NodeID n, dest :: NodeID n}
   deriving (Eq, Generic, Show)
@@ -25,7 +31,7 @@ checkSrcUnit :: (HUnits s n, MonadReader s m, MonadError ErrCode m)
 checkSrcUnit cmd = do
   unit <- asks $ flip (viewAt units) (src cmd)
   if isNothing unit
-    then throwError (-1,
+    then throwError (NoUnit,
       "There is no unit at " `append` srcName cmd `append` ".")
     else return cmd
 
@@ -35,21 +41,23 @@ checkAlreadyCmd cmd = do
   allCmds <- asks $ fmap _order . view orders
   if isNothing $ allCmds `index` src cmd
     then return cmd
-    else throwError (-2,
+    else throwError (AlreadyCmd,
       "The unit at " `append` srcName cmd
       `append` " has already been given a command.")
 
+{-
 checkHold :: MonadError ErrCode m => OneOrder n -> m (OneOrder n)
 checkHold cmd = if src cmd == dest cmd
   then throwError (-3, "There's no need to order a unit to hold.")
   else return cmd
+-}
 
 checkEnd :: (HEnds s n, MonadReader s m, MonadError ErrCode m)
   => OneOrder n -> m (OneOrder n)
 checkEnd cmd = do
   es <- asks $ flip (viewAt ends) (src cmd)
   if es `index` dest cmd == 0
-    then throwError (-4,
+    then throwError (NoEdge,
       "There is no edge from " `append` srcName cmd
       `append` " to " `append` destName cmd `append` ".")
     else return cmd
@@ -59,7 +67,7 @@ checkAlreadyDest :: (HOrders s n, MonadReader s m, MonadError ErrCode m)
 checkAlreadyDest cmd = do
   allCmds <- asks $ mapMaybe _order . toList . view orders
   if dest cmd `elem` allCmds
-    then throwError (-5,
+    then throwError (DestConflict,
       "There is already a unit moving to " `append` destName cmd `append` ".")
     else return cmd
 
@@ -69,7 +77,7 @@ checkOrder cmd =
   runReader . runExceptT $
   checkSrcUnit cmd
   >>= checkAlreadyCmd
-  >>= checkHold
+  -- >>= checkHold
   >>= checkEnd
   >>= checkAlreadyDest
 

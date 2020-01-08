@@ -33,6 +33,10 @@ singleQuotes = between (char '\'') (symbol "'")
 doubleQuotes :: Parser a -> Parser a
 doubleQuotes = between (char '"') (symbol "\"")
 
+-- |Returns bracketed value.
+brackets :: Parser a -> Parser a
+brackets = between (symbol "[") (symbol "]")
+
 anInteger :: Parser Integer
 anInteger = lexeme $ readT <$> takeWhile1P (Just "An Integer") isDigit
 

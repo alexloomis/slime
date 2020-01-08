@@ -3,7 +3,8 @@
 
 module Main where
 
-import Board     (Board, emptyBoard)
+import Board (Board, emptyBoard)
+-- import CommandLine
 import Interface (loop)
 
 import Data.Proxy      (Proxy)

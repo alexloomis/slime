@@ -10,7 +10,7 @@ import Parse.Util
 
 import Data.Char            (isSpace)
 import Data.Text            (unpack)
-import GHC.TypeNats        (KnownNat)
+import GHC.TypeNats         (KnownNat)
 import Text.Megaparsec
 import Text.Megaparsec.Char
 

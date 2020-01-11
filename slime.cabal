@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 18a63f61109744c5698221101dd6a49540df9540d37798a7b704d3af452b0dab
+-- hash: 3ad01d2a1e185a532a9c76b1f55383a70cd0d5994ac9321eb7394f541acdc653
 
 name:           slime
 version:        0.1.0.0
@@ -42,6 +42,7 @@ library
       Internal.Unit.Lobber
       Internal.Unit.Sprayer
       Internal.Util
+      Parse.CommandLine
       Parse.Interact
       Parse.ReadFile
       Parse.Util

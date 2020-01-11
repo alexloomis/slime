@@ -1,0 +1,21 @@
+[ENDS]
+1 -> 2 # 3
+  0 # 1
+2 ->
+  0 # 2
+  2 # 0
+
+[SLIME]
+0 -> 7
+1 -> 5
+2 -> 13
+
+[ALMOSTANYTHING]
+External options, not read.
+Header can be any unused all-upercase string,
+[COMMENT] will never be used, so is safe for comments.
+Unused blocks take a default value, such as the ORDER block not given here.
+
+[UNITS]
+2 -> Lobber
+

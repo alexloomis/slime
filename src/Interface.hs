@@ -1,13 +1,17 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Interface
   ( loop
+  , parseThenDo
+  , doList
   ) where
 
 import Engine
 import GameState
 import Parse.Interact
 
+import           Data.Text        (Text)
 import qualified Data.Text.IO     as T
 import           GHC.IO.Handle.FD (stdin)
 import           Text.Megaparsec  (errorBundlePretty, runParser)
@@ -44,9 +48,6 @@ load fp s = do
       return s
     Right new -> T.putStrLn "File loaded." >> return new
 
-quit :: IO ()
-quit = T.putStrLn "Bye!"
-
 showS :: GameState s n => s -> IO s
 showS s = T.putStrLn (showGame s) >> return s
 
@@ -62,22 +63,33 @@ status s = (print . victory $ s) >> return s
 graph :: GameState s n => s -> IO s
 graph s = T.putStrLn (graphGame s) >> return s
 
-loop :: GameState s n => s -> IO ()
-loop s = do
-  input <- T.hGetLine stdin
-  case runParser command "" input of
-    Left err -> do
-      putStrLn . errorBundlePretty $ err
-      loop s
+-- Does not handle Quit
+parseThenDo :: GameState s n => s -> Text -> IO s
+parseThenDo s t =
+  case runParser command "" t of
+    Left err -> (putStrLn . errorBundlePretty $ err) >> return s
     Right cmd -> case cmd of
-      Move n1 n2 -> move (OneOrder n1 n2) s >>= loop
-      Clear n    -> clear n s >>= loop
-      Save fp    -> save fp s >>= loop
-      Load fp    -> load fp s >>= loop
-      Show       -> showS s >>= loop
-      Peek       -> peek s >>= loop
-      Turn       -> turn s >>= loop
-      Status     -> status s >>= loop
-      Graph      -> graph s >>= loop
-      Quit       -> quit
+      Move n1 n2 -> move (OneOrder n1 n2) s
+      Clear n    -> clear n s
+      Save fp    -> save fp s
+      Load fp    -> load fp s
+      Show       -> showS s
+      Peek       -> peek s
+      Turn       -> turn s
+      Status     -> status s
+      Graph      -> graph s
+      Quit       -> putStrLn "Invalid command 'quit'." >> return s
+
+loop :: forall s n. GameState s n => s -> IO ()
+loop s = do
+  t <- T.hGetLine stdin
+  case runParser command "" t of
+    Right (Quit :: Command n) -> return ()
+    _                         -> parseThenDo s t >>= loop
+
+---------- Tools for commands from files/input args
+
+doList :: GameState s n => [Text] -> IO s -> IO s
+doList []     = id
+doList (x:xs) = (=<<) (doList xs . flip parseThenDo x)
 

@@ -1,0 +1,6 @@
+load board/example.bd
+show
+move 2 0
+show
+save board/example2.bd
+
